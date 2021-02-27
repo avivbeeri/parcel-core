@@ -3,10 +3,9 @@ import "math" for M, Vec
 import "./events" for CollisionEvent, MoveEvent
 
 class MoveAction is Action {
-  construct new(dir, speed) {
+  construct new(dir) {
     super()
     _dir = dir
-    _speed = speed
   }
 
   handleCollision(pos) {
@@ -25,8 +24,11 @@ class MoveAction is Action {
 
   perform() {
     var old = source.pos * 1
+    source.vel = _dir
     source.pos.x = source.pos.x + source.vel.x
     source.pos.y = source.pos.y + source.vel.y
+
+    var result = ActionResult.failure
 
     if (source.pos != old && handleCollision(source.pos)) {
       source.pos = old
@@ -34,11 +36,12 @@ class MoveAction is Action {
 
     if (source.pos != old) {
       ctx.events.add(MoveEvent.new(source))
+      result = ActionResult.success
     }
 
     if (source.vel.length > 0) {
       source.vel = Vec.new()
     }
-    return ActionResult.success
+    return result
   }
 }

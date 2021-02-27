@@ -42,11 +42,11 @@ class Zone is DataObject {
 
   addEntity(tag, entity) {
     _tagged[tag] = entity
-    entity.ctx = this
     return addEntity(entity)
   }
 
   addEntity(entity) {
+    entity.ctx = this
     _entities.add(entity)
     _entities.sort {|a, b| a.priority < b.priority}
     return entity

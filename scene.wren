@@ -5,7 +5,7 @@ import "input" for Keyboard
 import "math" for Vec, M
 import "./tilesheet" for Tilesheet
 import "./keys" for InputGroup, Actions
-import "./entities" for Player
+import "./entities" for Player, Dummy
 import "./core/world" for World, Zone
 import "./core/scene" for Scene
 import "./core/map" for TileMap, Tile
@@ -32,13 +32,14 @@ class WorldScene is Scene {
     _moving = false
     _tried = false
     _ui = []
-    _world = World.new(RealTimeStrategy.new())
+    _world = World.new(TurnBasedStrategy.new())
 
 
     var zone = Zone.new()
     var player = zone.addEntity("player", Player.new())
     _playerData = PlayerData.new()
     player["data"] = _playerData
+    var dummy = zone.addEntity(Dummy.new())
 
     zone.map = TileMap.init()
     zone.map[0, 0] = Tile.new({ "floor": "grass" })
@@ -91,8 +92,9 @@ class WorldScene is Scene {
       } else if (Actions.down.firing) {
         move.y = 1
       }
-      player.vel = move
-      player.action = MoveAction.new(move, 1)
+      if (move.length > 0) {
+        player.action = MoveAction.new(move)
+      }
     }
     pressed = Actions.directions.any {|key| key.down }
 
@@ -161,6 +163,8 @@ class WorldScene is Scene {
         } else {
           sprites["playerStand"][F].draw(sx, sy)
         }
+      } else if (entity is Dummy) {
+        Canvas.print("D", sx, sy, Display.fg)
       }
     }
     // Put a background on the player for readability
