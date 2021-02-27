@@ -9,7 +9,7 @@ class Entity is DataObject {
     _vel = Vec.new()
 
     // Lower is better
-    _priority = 1
+    _priority = 0
   }
 
   ctx { _ctx }

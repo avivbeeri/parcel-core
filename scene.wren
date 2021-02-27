@@ -41,12 +41,14 @@ class WorldScene is Scene {
     var player = zone.addEntity("player", Player.new())
     _playerData = PlayerData.new()
     player["data"] = _playerData
+
     var dummy = zone.addEntity(Dummy.new())
     dummy.pos = Vec.new(-1, 0)
 
     zone.map = TileMap.init()
     zone.map[0, 0] = Tile.new({ "floor": "grass" })
     zone.map[0, 1] = Tile.new({ "floor": "solid", "solid": true })
+    zone.map[10, 0] = Tile.new({ "floor": "solid", "solid": true })
 
     _zones = []
     _zoneIndex = 0

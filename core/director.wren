@@ -32,7 +32,16 @@ class RealTimeStrategy is Director {
       }
       return action
     }.toList
-    actions.where {|action| action != null }.each {|action| action.perform() }
+    actions.where {|action| action != null }.each {|action|
+      var result
+      while (true) {
+        result = action.perform()
+        action = result.alternate
+        if (action == null) {
+          break
+        }
+      }
+    }
   }
 }
 

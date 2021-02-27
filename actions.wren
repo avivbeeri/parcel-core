@@ -2,6 +2,17 @@ import "./core/action" for Action, ActionResult
 import "math" for M, Vec
 import "./events" for CollisionEvent, MoveEvent
 
+class LogAction is Action {
+  construct new() {
+    super()
+  }
+
+  perform() {
+    System.print("You make journal notes")
+    return ActionResult.success
+  }
+
+}
 class SleepAction is Action {
   cost { 2 }
   construct new() {
@@ -10,7 +21,7 @@ class SleepAction is Action {
 
   perform() {
     System.print("You sleep, and awaken refreshed.")
-    return ActionResult.success
+    return ActionResult.alternate(LogAction.new())
   }
 }
 
