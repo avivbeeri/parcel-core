@@ -12,6 +12,9 @@ class Entity is DataObject {
     _priority = 1
   }
 
+  ctx { _ctx }
+  ctx=(v) { _ctx = v }
+
   pos { _pos }
   pos=(v) { _pos = v }
 
@@ -38,8 +41,9 @@ class Entity is DataObject {
   }
 
   notify(ctx, event) { event }
+  getAction() { update() }
 
-  update(ctx) {}
-  draw(ctx) {}
+  update() {}
+  draw() {}
 }
 

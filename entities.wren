@@ -7,7 +7,7 @@ class Player is Entity {
     super()
   }
 
-  handleCollision(ctx, pos) {
+  handleCollision(pos) {
     var solid = ctx.map[pos]["solid"]
     var occupying = ctx.getEntitiesAtTile(pos.x, pos.y).where {|entity| !(entity is Player) }
     var solidEntity = false
@@ -22,11 +22,11 @@ class Player is Entity {
     return solid || solidEntity
   }
 
-  update(ctx) {
+  update() {
     var old = pos * 1
     move()
 
-    if (pos != old && handleCollision(ctx, pos)) {
+    if (pos != old && handleCollision(pos)) {
       pos = old
     }
 

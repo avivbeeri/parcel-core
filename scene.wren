@@ -1,4 +1,5 @@
 import "graphics" for ImageData, Color, Canvas
+import "./core/director" for RealTimeStrategy, TurnBasedStrategy
 
 import "input" for Keyboard
 import "math" for Vec, M
@@ -29,7 +30,8 @@ class WorldScene is Scene {
     _moving = false
     _tried = false
     _ui = []
-    _world = World.new()
+    _world = World.new(TurnBasedStrategy.new())
+
 
     var zone = Zone.new()
     var player = zone.addEntity("player", Player.new())
@@ -91,7 +93,7 @@ class WorldScene is Scene {
     }
     pressed = Actions.directions.any {|key| key.down }
 
-    _zone.update()
+    _world.update()
     for (event in _zone.events) {
       if (event is MoveEvent) {
         if (event.target is Player) {

@@ -1,9 +1,10 @@
 import "core/dataobject" for DataObject
 
 class World is DataObject {
-  construct new() {
+  construct new(strategy) {
     super()
     _worlds = []
+    _strategy = strategy
   }
 
   pushZone(world) {
@@ -14,6 +15,10 @@ class World is DataObject {
   }
 
   active { _worlds[0] }
+
+  update() {
+    _strategy.update(active)
+  }
 }
 
 class Zone is DataObject {
@@ -27,6 +32,8 @@ class Zone is DataObject {
   }
 
   entities { _entities }
+  events { _events }
+
   map { _map }
   map=(v) { _map = v }
   postUpdate { _postUpdate }
@@ -35,6 +42,7 @@ class Zone is DataObject {
 
   addEntity(tag, entity) {
     _tagged[tag] = entity
+    entity.ctx = this
     return addEntity(entity)
   }
 
@@ -43,8 +51,6 @@ class Zone is DataObject {
     _entities.sort {|a, b| a.priority < b.priority}
     return entity
   }
-
-  events { _events }
 
   update() {
     _events.clear()

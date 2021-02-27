@@ -29,6 +29,4 @@ class Game {
     __scene = scene.new(args)
     __scene.game = Game
   }
-
-
 }
