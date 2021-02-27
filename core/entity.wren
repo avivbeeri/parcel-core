@@ -45,5 +45,7 @@ class Entity is DataObject {
 
   update() {}
   draw() {}
+
+  toString { this.type.name }
 }
 

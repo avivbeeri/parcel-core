@@ -7,24 +7,30 @@ class ActionResult {
     _alt = null
   }
 
-  alternate { _alt }
-  alternate=(v) { _alt = v }
+  construct alternate(action) {
+    _success = true
+    _alt = action
+  }
 
+  alternate { _alt }
   succeeded { _success }
 }
 
 
 class Action {
+  static none { Action.new() }
   construct new() {}
+  cost { 1 }
   bind(entity) {
     _source = entity
     return this
   }
 
   perform() {
-    return null
+    return ActionResult.success
   }
 
   ctx { _source.ctx }
   source { _source }
+  toString { this.type.name }
 }

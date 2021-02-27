@@ -17,7 +17,7 @@ class World is DataObject {
   active { _worlds[0] }
 
   update() {
-    _strategy.update(active)
+    _strategy.bind(active).update()
   }
 }
 

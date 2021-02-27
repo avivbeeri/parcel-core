@@ -6,7 +6,7 @@ import "./display" for Display
 import "./tilesheet" for Tilesheet
 import "./keys" for InputGroup, Actions
 
-import "./core/director" for RealTimeStrategy, TurnBasedStrategy
+import "./core/director" for RealTimeStrategy, TurnBasedStrategy, EnergyStrategy
 import "./core/world" for World, Zone
 import "./core/scene" for Scene
 import "./core/map" for TileMap, Tile
@@ -34,14 +34,16 @@ class WorldScene is Scene {
     _moving = false
     _tried = false
     _ui = []
-    _world = World.new(RealTimeStrategy.new())
+    _world = World.new(EnergyStrategy.new())
 
 
     var zone = Zone.new()
     var player = zone.addEntity("player", Player.new())
+    player["#speed"] = 2
     _playerData = PlayerData.new()
     player["data"] = _playerData
     var dummy = zone.addEntity(Dummy.new())
+    dummy.pos = Vec.new(-1, 0)
 
     zone.map = TileMap.init()
     zone.map[0, 0] = Tile.new({ "floor": "grass" })

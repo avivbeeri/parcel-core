@@ -3,6 +3,7 @@ import "math" for M, Vec
 import "./events" for CollisionEvent, MoveEvent
 
 class SleepAction is Action {
+  cost { 2 }
   construct new() {
     super()
   }
@@ -14,9 +15,16 @@ class SleepAction is Action {
 }
 
 class MoveAction is Action {
+  construct new(dir, alwaysSucceed) {
+    super()
+    _dir = dir
+    _succeed = alwaysSucceed
+  }
+
   construct new(dir) {
     super()
     _dir = dir
+    _succeed = false
   }
 
   handleCollision(pos) {
@@ -48,6 +56,8 @@ class MoveAction is Action {
     if (source.pos != old) {
       ctx.events.add(MoveEvent.new(source))
       result = ActionResult.success
+    } else if (_succeed) {
+      result = ActionResult.alternate(Action.none)
     }
 
     if (source.vel.length > 0) {

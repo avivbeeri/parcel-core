@@ -9,7 +9,7 @@ class Dummy is Entity {
   }
 
   update() {
-    return MoveAction.new(Vec.new(1, 0))
+    return MoveAction.new(Vec.new(1, 0), true)
   }
 }
 
