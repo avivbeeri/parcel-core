@@ -39,7 +39,6 @@ class WorldScene is Scene {
 
     var zone = Zone.new()
     var player = zone.addEntity("player", Player.new())
-    player["#speed"] = 2
     _playerData = PlayerData.new()
     player["data"] = _playerData
     var dummy = zone.addEntity(Dummy.new())
@@ -134,8 +133,11 @@ class WorldScene is Scene {
     }
     var x = Canvas.width - 20
 
-    for (dy in -5...5) {
-      for (dx in -7...7) {
+    var xRange = 14
+    var yRange = 10
+
+    for (dy in -yRange...yRange) {
+      for (dx in -xRange...xRange) {
         var x = player.pos.x + dx
         var y = player.pos.y + dy
         var sx = x * 8 + X_OFFSET

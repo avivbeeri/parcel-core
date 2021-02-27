@@ -17,6 +17,7 @@ class Player is Entity {
   construct new() {
     super()
     _action = null
+    this["#speed"] = 6
   }
 
   action { _action }
