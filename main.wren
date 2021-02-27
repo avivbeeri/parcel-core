@@ -6,7 +6,7 @@ import "./display" for Display
 
 class Game {
   static init() {
-    var scale = 6
+    var scale = 3
     Canvas.font = "classic"
     Window.title = "Untitled Game"
     Window.lockstep = true

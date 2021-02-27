@@ -2,6 +2,7 @@ import "math" for M
 import "graphics" for Canvas
 import "./display" for Display
 import "./core/scene" for Ui
+import "./core/action" for Action
 import "./keys" for Actions
 
 class Menu is Ui {
@@ -18,7 +19,6 @@ class Menu is Ui {
     for (i in 0..._size) {
       _width = M.max(_width, _actions[i * 2].count)
     }
-    System.print(_width)
   }
 
   update() {
@@ -30,6 +30,10 @@ class Menu is Ui {
       var action = _actions[_cursor * 2 + 1]
       if (action == "cancel") {
         _done = true
+      } else if (action is Action) {
+        var player = ctx.getEntityByTag("player")
+        player.action = action
+        _done = true
       }
     } else if (Actions.up.justPressed) {
       _cursor = _cursor - 1
@@ -40,7 +44,7 @@ class Menu is Ui {
   }
 
   draw() {
-    Canvas.rectfill(0, 0, 10 + _width * 6, Canvas.height, Display.bg)
+    Canvas.rectfill(0, 0, 10 + _width * 6, _size * 8 + 6, Display.bg)
     var y = 4
     var i = 0
     for (i in 0..._size) {
@@ -50,7 +54,7 @@ class Menu is Ui {
       Canvas.print(_actions[i * 2], 10, y, Display.fg)
       y = y + 8
     }
-    Canvas.rect(1, 1, 10 + _width * 6 - 2, Canvas.height - 2, Display.fg)
+    Canvas.rect(1, 1, 10 + _width * 6 - 2, _size * 8 + 6, Display.fg)
   }
 
   finished { _done }

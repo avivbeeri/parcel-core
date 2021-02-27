@@ -1,28 +1,30 @@
 import "graphics" for ImageData, Color, Canvas
-import "./core/director" for RealTimeStrategy, TurnBasedStrategy
-
 import "input" for Keyboard
 import "math" for Vec, M
+
+import "./display" for Display
 import "./tilesheet" for Tilesheet
 import "./keys" for InputGroup, Actions
-import "./entities" for Player, Dummy
+
+import "./core/director" for RealTimeStrategy, TurnBasedStrategy
 import "./core/world" for World, Zone
 import "./core/scene" for Scene
 import "./core/map" for TileMap, Tile
+
 import "./menu" for Menu
 import "./events" for CollisionEvent, MoveEvent
 import "./player" for PlayerData
-
-import "./actions" for MoveAction
-
-import "./display" for Display
+import "./actions" for MoveAction, SleepAction
+import "./entities" for Player, Dummy
 
 import "./sprites" for StandardSpriteSet, InvertedSpriteSet
 import "./effects" for CameraLerp
 
+// Timer variables
 var T = 0
 var F = 0
 
+// Is the view static?
 var STATIC = false
 
 
@@ -32,7 +34,7 @@ class WorldScene is Scene {
     _moving = false
     _tried = false
     _ui = []
-    _world = World.new(TurnBasedStrategy.new())
+    _world = World.new(RealTimeStrategy.new())
 
 
     var zone = Zone.new()
@@ -43,6 +45,7 @@ class WorldScene is Scene {
 
     zone.map = TileMap.init()
     zone.map[0, 0] = Tile.new({ "floor": "grass" })
+    zone.map[0, 1] = Tile.new({ "floor": "solid", "solid": true })
 
     _zones = []
     _zoneIndex = 0
@@ -73,15 +76,15 @@ class WorldScene is Scene {
     // Overzone interaction
     if (Actions.interact.justPressed) {
       _ui.add(Menu.new(_zone, [
-        "Sleep", "relax",
-        "Cook", "cook",
+        "Cook", "relax",
+        "Sleep", SleepAction.new(),
         "Cancel", "cancel"
       ]))
       return
     }
 
 
-    if (!_tried) {
+    if (!player.action && !_tried) {
       var move = Vec.new()
       if (Actions.left.firing) {
         move.x = -1
@@ -141,8 +144,8 @@ class WorldScene is Scene {
         } else if (tile["floor"] == "grass") {
           var list = sprites[tile["floor"]]
           list[0].draw(sx, sy)
-        } else if (tile["floor"] == "void") {
-          Canvas.rectfill(sx, sy, 8, 8, Color.black)
+        } else if (tile["floor"] == "solid") {
+          Canvas.rectfill(sx, sy, 8, 8, Display.fg)
         } else if (tile["floor"] == "door") {
           var list = sprites[tile["floor"]]
           list[0].draw(sx, sy)

@@ -19,6 +19,7 @@ class Player is Entity {
     _action = null
   }
 
+  action { _action }
   action=(v) {
     _action = v
   }

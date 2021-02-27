@@ -55,28 +55,28 @@ class InputGroup {
 }
 
 var UP_KEY = InputGroup.new([
-  Keyboard["2"], Keyboard["up"], Keyboard["w"]
+  Keyboard["up"], Keyboard["w"]
 ])
 var DOWN_KEY = InputGroup.new([
-  Keyboard["8"], Keyboard["down"], Keyboard["s"]
+  Keyboard["down"], Keyboard["s"]
 ])
 var LEFT_KEY = InputGroup.new([
-  Keyboard["4"], Keyboard["left"], Keyboard["a"]
+  Keyboard["left"], Keyboard["a"]
 ])
 var RIGHT_KEY = InputGroup.new([
-  Keyboard["6"], Keyboard["right"], Keyboard["d"]
+  Keyboard["right"], Keyboard["d"]
 ])
 
 var CANCEL_KEY = InputGroup.new([
-  Keyboard["3"], Keyboard["backspace"], Keyboard["escape"]
+  Keyboard["backspace"], Keyboard["escape"]
 ])
 
 var CONFIRM_KEY = InputGroup.new([
-  Keyboard["5"], Keyboard["return"], Keyboard["space"]
+  Keyboard["z"], Keyboard["x"], Keyboard["e"], Keyboard["return"], Keyboard["space"]
 ])
 
 var INTERACT_KEY = InputGroup.new([
-  Keyboard["5"], Keyboard["e"]
+  Keyboard["e"], Keyboard["space"]
 ])
 
 var DIR_KEYS = [ UP_KEY, DOWN_KEY, LEFT_KEY, RIGHT_KEY ]

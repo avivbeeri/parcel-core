@@ -2,6 +2,17 @@ import "./core/action" for Action, ActionResult
 import "math" for M, Vec
 import "./events" for CollisionEvent, MoveEvent
 
+class SleepAction is Action {
+  construct new() {
+    super()
+  }
+
+  perform() {
+    System.print("You sleep, and awaken refreshed.")
+    return ActionResult.success
+  }
+}
+
 class MoveAction is Action {
   construct new(dir) {
     super()
