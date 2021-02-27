@@ -1,10 +1,12 @@
 import "math" for Vec
 import "./core/entity" for Entity
 import "./events" for CollisionEvent, MoveEvent
+import "./actions" for MoveAction
 
 class Player is Entity {
   construct new() {
     super()
+    _action = null
   }
 
   handleCollision(pos) {
@@ -22,7 +24,14 @@ class Player is Entity {
     return solid || solidEntity
   }
 
+  action=(v) {
+    _action = v
+    _action.bind(this)
+  }
+
   update() {
+    return _action
+    /*
     var old = pos * 1
     move()
 
@@ -37,6 +46,7 @@ class Player is Entity {
     if (vel.length > 0) {
       vel = Vec.new()
     }
+    */
   }
 }
 

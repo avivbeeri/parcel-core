@@ -13,6 +13,8 @@ import "./menu" for Menu
 import "./events" for CollisionEvent, MoveEvent
 import "./player" for PlayerData
 
+import "./actions" for MoveAction
+
 import "./display" for Display
 
 import "./sprites" for StandardSpriteSet, InvertedSpriteSet
@@ -30,7 +32,7 @@ class WorldScene is Scene {
     _moving = false
     _tried = false
     _ui = []
-    _world = World.new(TurnBasedStrategy.new())
+    _world = World.new(RealTimeStrategy.new())
 
 
     var zone = Zone.new()
@@ -90,6 +92,7 @@ class WorldScene is Scene {
         move.y = 1
       }
       player.vel = move
+      player.action = MoveAction.new(move, 1)
     }
     pressed = Actions.directions.any {|key| key.down }
 

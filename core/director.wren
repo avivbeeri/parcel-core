@@ -4,7 +4,8 @@ class RealTimeStrategy {
   construct new() {}
   update(world) {
     world.events.clear()
-    world.entities.each {|entity| entity.update() }
+    var actions = world.entities.map {|entity| entity.update() }
+    actions.each {|action| action.perform() }
     world.postUpdate.each {|hook| hook.update() }
     world.events.sort {|a, b| a.priority < b.priority}
   }

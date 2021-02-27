@@ -15,8 +15,10 @@ class ActionResult {
 
 
 class Action {
-  construct bind(entity) {
+  construct new() {}
+  bind(entity) {
     _source = entity
+    return this
   }
 
   perform() {
