@@ -8,13 +8,16 @@ class World is DataObject {
   }
 
   pushZone(world) {
+    world.parent = this
     _worlds.insert(0, world)
+    return world
   }
   popZone() {
     return _worlds.removeAt(0)
   }
 
   active { _worlds[0] }
+  strategy { _strategy }
 
   update() {
     _strategy.bind(active).update()
@@ -29,6 +32,7 @@ class Zone is DataObject {
     _tagged = {}
     _postUpdate = []
     _map = null
+    _parent = null
   }
 
   entities { _entities }
@@ -37,6 +41,9 @@ class Zone is DataObject {
   map { _map }
   map=(v) { _map = v }
   postUpdate { _postUpdate }
+
+  parent { _parent }
+  parent=(v) { _parent = v }
 
   getEntityByTag(tag) { _tagged[tag] }
 
@@ -48,8 +55,18 @@ class Zone is DataObject {
   addEntity(entity) {
     entity.ctx = this
     _entities.add(entity)
-    _entities.sort {|a, b| a.priority < b.priority}
+    parent.strategy.onEntityAdd(entity)
+
     return entity
+  }
+
+  removeEntity(entity) {
+    var pos = entities.indexOf(entity)
+    if (pos == -1) {
+      return
+    }
+    parent.strategy.onEntityRemove(pos)
+    entities.removeAt(pos)
   }
 
   update() {

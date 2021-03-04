@@ -39,7 +39,6 @@ class MoveAction is Action {
   }
 
   handleCollision(pos) {
-    var solid = ctx.map[pos]["solid"]
     var occupying = ctx.getEntitiesAtTile(pos.x, pos.y).where {|entity| entity != source }
     var solidEntity = false
     for (entity in occupying) {
@@ -49,7 +48,7 @@ class MoveAction is Action {
         solidEntity = true
       }
     }
-    return solid || solidEntity
+    return solidEntity
   }
 
   perform() {
@@ -60,8 +59,16 @@ class MoveAction is Action {
 
     var result = ActionResult.failure
 
-    if (source.pos != old && handleCollision(source.pos)) {
-      source.pos = old
+    if (source.pos != old) {
+      var solid = ctx.map[source.pos]["solid"]
+      var occupied = false
+      occupied = !solid && handleCollision(source.pos)
+      if (solid || occupied) {
+        source.pos = old
+      }
+      if (occupied) {
+        result = ActionResult.alternate(AttackAction.new(_dir))
+      }
     }
 
     if (source.pos != old) {
@@ -76,4 +83,19 @@ class MoveAction is Action {
     }
     return result
   }
+}
+
+class AttackAction is Action {
+  construct new(dir) {
+    super()
+    _dir = dir
+    _succeed = false
+  }
+  perform() {
+    var target = source.pos + _dir
+    var occupying = ctx.getEntitiesAtTile(target.x, target.y).where {|entity| entity != source }
+    occupying.each {|entity| ctx.removeEntity(entity) }
+    return ActionResult.success
+  }
+
 }

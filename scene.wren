@@ -37,7 +37,7 @@ class WorldScene is Scene {
     _world = World.new(EnergyStrategy.new())
 
 
-    var zone = Zone.new()
+    var zone = _world.pushZone(Zone.new())
     var player = zone.addEntity("player", Player.new())
     _playerData = PlayerData.new()
     player["data"] = _playerData
@@ -45,15 +45,14 @@ class WorldScene is Scene {
     var dummy = zone.addEntity(Dummy.new())
     dummy.pos = Vec.new(-1, 0)
 
+    dummy = zone.addEntity(Dummy.new())
+    dummy.pos = Vec.new(-1, 4)
+
     zone.map = TileMap.init()
     zone.map[0, 0] = Tile.new({ "floor": "grass" })
     zone.map[0, 1] = Tile.new({ "floor": "solid", "solid": true })
     zone.map[10, 0] = Tile.new({ "floor": "solid", "solid": true })
 
-    _zones = []
-    _zoneIndex = 0
-
-    _world.pushZone(zone)
     _camera.x = player.pos.x * 8
     _camera.y = player.pos.y * 8
   }

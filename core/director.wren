@@ -20,6 +20,8 @@ class Director {
   }
 
   processEntities() {}
+  onEntityAdd(entity) {}
+  onEntityRemove(entity) {}
 }
 
 class RealTimeStrategy is Director {
@@ -42,6 +44,9 @@ class RealTimeStrategy is Director {
         }
       }
     }
+  }
+  onEntityAdd(entity) {
+    _entities.sort {|a, b| a.priority < b.priority}
   }
 }
 
@@ -94,6 +99,16 @@ class EnergyStrategy is Director {
     actor.priority = 0
     advance()
   }
+
+  onEntityRemove(pos) {
+    if (pos > _turn) {
+      _turn = _turn - 1
+    }
+    // It hasn't been deleted yet but it is about to be.
+    if (_turn >= world.entities.count - 1) {
+      _turn = 0
+    }
+  }
 }
 
 class TurnBasedStrategy is Director  {
@@ -131,5 +146,15 @@ class TurnBasedStrategy is Director  {
       action = result.alternate
     }
     advance()
+  }
+
+  onEntityRemove(pos) {
+    if (pos > _turn) {
+      _turn = _turn - 1
+    }
+    // It hasn't been deleted yet but it is about to be.
+    if (_turn >= world.entities.count - 1) {
+      _turn = 0
+    }
   }
 }
