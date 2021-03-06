@@ -17,7 +17,7 @@ import "./player" for PlayerData
 import "./actions" for MoveAction, SleepAction
 import "./entities" for Player, Dummy
 
-import "./sprites" for StandardSpriteSet, InvertedSpriteSet
+import "./sprites" for StandardSpriteSet
 import "./effects" for CameraLerp
 
 // Timer variables
