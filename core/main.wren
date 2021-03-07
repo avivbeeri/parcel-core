@@ -1,5 +1,6 @@
 import "./core/display" for Display
 
+
 class ParcelMain {
   construct new() {}
   construct new(scene) {
@@ -10,7 +11,9 @@ class ParcelMain {
   }
 
   init() {
-    Display.setup()
+    import "json" for Json
+    var config = Json.load("config.json")
+    Display.setup(config["display"])
   }
 
   update() {
