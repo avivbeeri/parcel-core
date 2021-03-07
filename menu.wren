@@ -17,7 +17,7 @@ class Menu is Ui {
     _cursor = 0
     _width = 0
     for (i in 0..._size) {
-      _width = M.max(_width, _actions[i * 2].count)
+      _width = M.max(_width, Canvas.getPrintArea(_actions[i * 2]).x)
     }
   }
 
@@ -28,7 +28,7 @@ class Menu is Ui {
     }
     if (InputActions.confirm.justPressed) {
       var action = _actions[_cursor * 2 + 1]
-      if (action == "cancel") {
+      if (!action || action == "cancel") {
         _done = true
       } else if (action is Action) {
         var player = ctx.getEntityByTag("player")
@@ -44,7 +44,7 @@ class Menu is Ui {
   }
 
   draw() {
-    Canvas.rectfill(0, 0, 10 + _width * 6, _size * 8 + 6, Display.bg)
+    Canvas.rectfill(0, 0, 10 + _width, _size * 8 + 6, Display.bg)
     var y = 4
     var i = 0
     for (i in 0..._size) {
@@ -54,7 +54,7 @@ class Menu is Ui {
       Canvas.print(_actions[i * 2], 10, y, Display.fg)
       y = y + 8
     }
-    Canvas.rect(1, 1, 10 + _width * 6 - 2, _size * 8 + 6, Display.fg)
+    Canvas.rect(1, 1, 10 + _width, _size * 8 + 6, Display.fg)
   }
 
   finished { _done }

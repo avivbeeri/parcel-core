@@ -1,4 +1,4 @@
-import "math" for Vec, M
+import "math" for Vec
 
 import "./core/main" for ParcelMain
 import "./core/world" for World, Zone

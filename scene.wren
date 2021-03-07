@@ -61,7 +61,7 @@ class WorldScene is Scene {
     // Overzone interaction
     if (InputActions.interact.justPressed) {
       _ui.add(Menu.new(_zone, [
-        "Cook", "relax",
+        "Cook", null,
         "Sleep", SleepAction.new(),
         "Cancel", "cancel"
       ]))
