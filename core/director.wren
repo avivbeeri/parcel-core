@@ -90,6 +90,7 @@ class EnergyStrategy is Director {
         // Action wasn't successful, allow retry
         return
       }
+      System.print("%(actor): %(action)")
 
       if (!result.alternate) {
         break
@@ -139,6 +140,7 @@ class TurnBasedStrategy is Director  {
         // Action wasn't successful, allow retry
         return
       }
+      System.print("%(actor): %(action)")
 
       if (!result.alternate) {
         break

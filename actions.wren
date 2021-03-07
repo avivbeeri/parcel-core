@@ -60,7 +60,7 @@ class MoveAction is Action {
     var result = ActionResult.failure
 
     if (source.pos != old) {
-      var solid = ctx.map[source.pos]["solid"]
+      var solid = ctx.isSolidAt(source.pos)
       var occupied = false
       occupied = !solid && handleCollision(source.pos)
       if (solid || occupied) {

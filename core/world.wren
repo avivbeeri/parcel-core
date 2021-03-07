@@ -1,4 +1,5 @@
 import "core/dataobject" for DataObject
+import "core/event" for EntityAddedEvent, EntityRemovedEvent
 
 class World is DataObject {
   construct new(strategy) {
@@ -33,6 +34,8 @@ class Zone is DataObject {
     _postUpdate = []
     _map = null
     _parent = null
+    _nextId = 0
+    _freeIds = []
   }
 
   entities { _entities }
@@ -45,8 +48,6 @@ class Zone is DataObject {
   parent { _parent }
   parent=(v) { _parent = v }
 
-  getEntityByTag(tag) { _tagged[tag] }
-
   addEntity(tag, entity) {
     _tagged[tag] = entity
     return addEntity(entity)
@@ -57,6 +58,14 @@ class Zone is DataObject {
     _entities.add(entity)
     parent.strategy.onEntityAdd(entity)
 
+    if (_freeIds.count > 0) {
+      entity.id = _freeIds.removeAt(-1)
+    } else {
+      entity.id = _nextId
+      _nextId = _nextId + 1
+    }
+    _events.add(EntityAddedEvent.new(entity.id))
+
     return entity
   }
 
@@ -65,38 +74,30 @@ class Zone is DataObject {
     if (pos == -1) {
       return
     }
+    _freeIds.add(entity.id)
     parent.strategy.onEntityRemove(pos)
     entities.removeAt(pos)
+    _events.add(EntityRemovedEvent.new(entity.id))
   }
 
-  update() {
-    _events.clear()
-    _entities.each {|entity| entity.update(this) }
-    _postUpdate.each {|hook| hook.update(this) }
-    _events.sort {|a, b| a.priority < b.priority}
+  getEntityByTag(tag) { _tagged[tag] }
+  getEntityById(id) {
+    var ent = _entities.where {|entity| entity.id == id }
+    if (ent.count == 1) {
+      return ent.toList.removeAt(0)
+    } else if (ent.count > 1) {
+      Fiber.abort("Assert failure: Entities cannot share IDs")
+    }
+    return null
   }
 
-  draw() {
-    _entities.each {|entity| entity.draw(this) }
-  }
-
+  getEntitiesAtTile(vec) { getEntitiesAtTile(vec.x, vec.y) }
   getEntitiesAtTile(x, y) {
     return _entities.where {|entity| entity.occupies(x, y) }
   }
 
-  checkCollision(vec) { checkCollision(vec.x, vec.y) }
-  checkCollision(x, y) {
-    var solid = map[x, y]["solid"]
-    var occupies = false
-    if (!solid) {
-      for (entity in _entities) {
-        // Todo: There's no way to check the player
-        if (entity["solid"] && entity.occupies(x, y)) {
-          occupies = true
-          break
-        }
-      }
-    }
-    return solid || occupies
+  isSolidAt(pos) { isSolidAt(pos.x, pos.y) }
+  isSolidAt(x, y) {
+    return map[x, y]["solid"]
   }
 }

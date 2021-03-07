@@ -12,6 +12,9 @@ class Entity is DataObject {
     _priority = 0
   }
 
+  id { _id }
+  id=(v) { _id = v }
+
   ctx { _ctx }
   ctx=(v) { _ctx = v }
 
@@ -46,6 +49,6 @@ class Entity is DataObject {
   update() {}
   draw() {}
 
-  toString { this.type.name }
+  toString { "%(this.type.name) (id: %(_id))" }
 }
 

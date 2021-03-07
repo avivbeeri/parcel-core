@@ -10,6 +10,7 @@ import "./core/director" for RealTimeStrategy, TurnBasedStrategy, EnergyStrategy
 import "./core/world" for World, Zone
 import "./core/scene" for Scene
 import "./core/map" for TileMap, Tile
+import "./core/event" for EntityRemovedEvent, EntityAddedEvent
 
 import "./menu" for Menu
 import "./events" for CollisionEvent, MoveEvent
@@ -105,7 +106,11 @@ class WorldScene is Scene {
 
     _world.update()
     for (event in _zone.events) {
-      if (event is MoveEvent) {
+      if (event is EntityAddedEvent) {
+        System.print("Entity %(event.id) was added")
+      } else if (event is EntityRemovedEvent) {
+        System.print("Entity %(event.id) was removed")
+      } else if (event is MoveEvent) {
         if (event.target is Player) {
           _moving = true
           _ui.add(CameraLerp.new(this, event.target.pos * 8))
