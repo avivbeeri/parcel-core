@@ -16,7 +16,11 @@ import "./scene" for WorldScene
 // World generation code
 var world = World.new(EnergyStrategy.new())
 
-var zone = world.pushZone(Zone.new())
+var zone = world.pushZone(Zone.new(TileMap.init()))
+zone.map[0, 0] = Tile.new({ "floor": "grass" })
+zone.map[0, 1] = Tile.new({ "floor": "solid", "solid": true })
+zone.map[10, 0] = Tile.new({ "floor": "solid", "solid": true })
+
 var player = zone.addEntity("player", Player.new())
 player["data"] = PlayerData.new()
 
@@ -26,9 +30,4 @@ dummy.pos = Vec.new(-1, 0)
 dummy = zone.addEntity(Dummy.new())
 dummy.pos = Vec.new(-1, 4)
 
-zone.map = TileMap.init()
-zone.map[0, 0] = Tile.new({ "floor": "grass" })
-zone.map[0, 1] = Tile.new({ "floor": "solid", "solid": true })
-zone.map[10, 0] = Tile.new({ "floor": "solid", "solid": true })
-
-var Game = ParcelMain.new(WorldScene, [world])
+var Game = ParcelMain.new(WorldScene, [ world ])

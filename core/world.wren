@@ -28,12 +28,22 @@ class World is DataObject {
 class Zone is DataObject {
   construct new() {
     super()
+    init()
+  }
+
+  construct new(map) {
+    super()
+    init()
+    _map = map
+  }
+
+  init() {
     _entities = []
     _events = []
     _tagged = {}
     _postUpdate = []
-    _map = null
-    _parent = null
+    _map = _map || null
+    _parent = _parent || null
     _nextId = 0
     _freeIds = []
   }
