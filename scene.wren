@@ -1,19 +1,15 @@
-import "graphics" for ImageData, Color, Canvas
+import "graphics" for ImageData, Canvas
 import "input" for Keyboard
 import "math" for Vec, M
 
-import "./display" for Display
+import "./core/display" for Display
 import "./keys" for InputGroup, InputActions
 
-import "./core/director" for RealTimeStrategy, TurnBasedStrategy, EnergyStrategy
-import "./core/world" for World, Zone
 import "./core/scene" for Scene
-import "./core/map" for TileMap, Tile
 import "./core/event" for EntityRemovedEvent, EntityAddedEvent
 
 import "./menu" for Menu
 import "./events" for CollisionEvent, MoveEvent
-import "./player" for PlayerData
 import "./actions" for MoveAction, SleepAction
 import "./entities" for Player, Dummy
 
@@ -30,28 +26,15 @@ var STATIC = false
 
 class WorldScene is Scene {
   construct new(args) {
+    // Args are currently unused.
+
     _camera = Vec.new()
     _moving = false
     _tried = false
     _ui = []
-    _world = World.new(EnergyStrategy.new())
 
-
-    var zone = _world.pushZone(Zone.new())
-    var player = zone.addEntity("player", Player.new())
-    _playerData = PlayerData.new()
-    player["data"] = _playerData
-
-    var dummy = zone.addEntity(Dummy.new())
-    dummy.pos = Vec.new(-1, 0)
-
-    dummy = zone.addEntity(Dummy.new())
-    dummy.pos = Vec.new(-1, 4)
-
-    zone.map = TileMap.init()
-    zone.map[0, 0] = Tile.new({ "floor": "grass" })
-    zone.map[0, 1] = Tile.new({ "floor": "solid", "solid": true })
-    zone.map[10, 0] = Tile.new({ "floor": "solid", "solid": true })
+    _world = args[0]
+    var player = _world.active.getEntityByTag("player")
 
     _camera.x = player.pos.x * 8
     _camera.y = player.pos.y * 8
@@ -133,7 +116,7 @@ class WorldScene is Scene {
     var player = _zone.getEntityByTag("player")
     var X_OFFSET = 4
     var sprites = StandardSpriteSet
-    Canvas.cls()
+    Canvas.cls(Display.bg)
 
     var cx = (Canvas.width - X_OFFSET - 20) / 2
     var cy = Canvas.height / 2 - 4
@@ -188,7 +171,7 @@ class WorldScene is Scene {
       Canvas.offset()
       var tile = _zone.map[player.pos]
       if (tile["floor"] || _zone["floor"]) {
-        Canvas.rectfill(cx, cy, 8, 8, _invert ? Display.fg : Display.bg)
+        Canvas.rectfill(cx, cy, 8, 8, Display.bg)
       }
       // Draw player in screen center
       if (_moving) {
@@ -198,17 +181,12 @@ class WorldScene is Scene {
       }
     }
 
-
     for (ui in _ui) {
       var block = ui.draw()
       if (block) {
         break
       }
     }
-
-    // Draw UI overlay
-    Canvas.rectfill(x, 0, 20, Canvas.height, Display.fg)
-    Canvas.line(x+1, 0, x+1, Canvas.height, Display.bg)
   }
 
   world { _world }

@@ -1,30 +1,30 @@
-import "graphics" for Canvas, Font
-import "dome" for Window
+import "math" for Vec, M
+
+import "./core/main" for ParcelMain
+import "./core/world" for World, Zone
+import "./core/map" for TileMap, Tile
+import "./core/director" for RealTimeStrategy, TurnBasedStrategy, EnergyStrategy
+import "./player" for PlayerData
+import "./entities" for Player, Dummy
+
 import "./scene" for WorldScene
-import "./display" for Display
 
+// World generation code
+var world = World.new(EnergyStrategy.new())
 
-class Game {
-  static init() {
-    var scale = 3
-    Window.title = "Untitled Game"
-    Window.lockstep = true
-    Window.resize(Canvas.width * scale, Canvas.height * scale)
-    Display.setup()
+var zone = world.pushZone(Zone.new())
+var player = zone.addEntity("player", Player.new())
+player["data"] = PlayerData.new()
 
-    push(WorldScene)
-  }
+var dummy = zone.addEntity(Dummy.new())
+dummy.pos = Vec.new(-1, 0)
 
-  static update() {
-    __scene.update()
-  }
-  static draw(dt) {
-    __scene.draw()
-  }
+dummy = zone.addEntity(Dummy.new())
+dummy.pos = Vec.new(-1, 4)
 
-  static push(scene) { push(scene, null) }
-  static push(scene, args) {
-    __scene = scene.new(args)
-    __scene.game = Game
-  }
-}
+zone.map = TileMap.init()
+zone.map[0, 0] = Tile.new({ "floor": "grass" })
+zone.map[0, 1] = Tile.new({ "floor": "solid", "solid": true })
+zone.map[10, 0] = Tile.new({ "floor": "solid", "solid": true })
+
+var Game = ParcelMain.new(WorldScene, [world])

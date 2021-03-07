@@ -1,5 +1,5 @@
 import "graphics" for ImageData, Color
-import "./display" for Display
+import "./core/display" for Display
 
 class Tilesheet {
   construct new(path, tileSize) {
@@ -11,10 +11,10 @@ class Tilesheet {
     _width = _image.width / _tSize
   }
 
-  draw(s, x, y) { draw(s, x, y, Display.fg, Display.bg) }
+  draw(s, x, y) { draw(s, x, y, Display.fg, Color.none) }
   draw(s, x, y, fg, bg) { getTile(s, fg, bg).draw(x, y) }
 
-  getTile(s) { getTile(s, Display.fg, Display.bg) }
+  getTile(s) { getTile(s, Display.fg, Color.none) }
   getTile(s, fg, bg) {
     var sy = (s / _width).floor * _tSize
     var sx = (s % _width).floor * _tSize

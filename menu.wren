@@ -1,6 +1,6 @@
 import "math" for M
 import "graphics" for Canvas
-import "./display" for Display
+import "./core/display" for Display
 import "./core/scene" for Ui
 import "./core/action" for Action
 import "./keys" for InputActions
