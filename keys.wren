@@ -27,17 +27,23 @@ var INTERACT_KEY = InputGroup.new([
   Keyboard["e"], Keyboard["space"]
 ])
 
+var INVENTORY_KEY = InputGroup.new([
+  Keyboard["i"]
+])
+
+
 var DIR_KEYS = [ UP_KEY, DOWN_KEY, LEFT_KEY, RIGHT_KEY ]
 // Set frequency for smoother tile movement
 DIR_KEYS.each {|key| key.frequency = 1 }
 
-class Actions {
+class InputActions {
   static directions { DIR_KEYS }
 
   static up { UP_KEY }
   static down { DOWN_KEY }
   static left { LEFT_KEY }
   static right { RIGHT_KEY }
+  static inventory { INVENTORY_KEY }
   static interact { INTERACT_KEY }
   static confirm { CONFIRM_KEY }
   static cancel { CANCEL_KEY }

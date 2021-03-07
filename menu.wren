@@ -3,7 +3,7 @@ import "graphics" for Canvas
 import "./display" for Display
 import "./core/scene" for Ui
 import "./core/action" for Action
-import "./keys" for Actions
+import "./keys" for InputActions
 
 class Menu is Ui {
   construct new(ctx, actions) {
@@ -22,11 +22,11 @@ class Menu is Ui {
   }
 
   update() {
-    if (Actions.cancel.justPressed) {
+    if (InputActions.cancel.justPressed) {
       _done = true
       return
     }
-    if (Actions.confirm.justPressed) {
+    if (InputActions.confirm.justPressed) {
       var action = _actions[_cursor * 2 + 1]
       if (action == "cancel") {
         _done = true
@@ -35,9 +35,9 @@ class Menu is Ui {
         player.action = action
         _done = true
       }
-    } else if (Actions.up.justPressed) {
+    } else if (InputActions.up.justPressed) {
       _cursor = _cursor - 1
-    } else if (Actions.down.justPressed) {
+    } else if (InputActions.down.justPressed) {
       _cursor = _cursor + 1
     }
     _cursor = M.mid(0, _cursor, _size - 1)

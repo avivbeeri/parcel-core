@@ -3,8 +3,7 @@ import "input" for Keyboard
 import "math" for Vec, M
 
 import "./display" for Display
-import "./tilesheet" for Tilesheet
-import "./keys" for InputGroup, Actions
+import "./keys" for InputGroup, InputActions
 
 import "./core/director" for RealTimeStrategy, TurnBasedStrategy, EnergyStrategy
 import "./core/world" for World, Zone
@@ -77,7 +76,7 @@ class WorldScene is Scene {
 
 
     // Overzone interaction
-    if (Actions.interact.justPressed) {
+    if (InputActions.interact.justPressed) {
       _ui.add(Menu.new(_zone, [
         "Cook", "relax",
         "Sleep", SleepAction.new(),
@@ -89,22 +88,26 @@ class WorldScene is Scene {
 
     if (!player.action && !_tried) {
       var move = Vec.new()
-      if (Actions.left.firing) {
+      if (InputActions.left.firing) {
         move.x = -1
-      } else if (Actions.right.firing) {
+      } else if (InputActions.right.firing) {
         move.x = 1
-      } else if (Actions.up.firing) {
+      } else if (InputActions.up.firing) {
         move.y = -1
-      } else if (Actions.down.firing) {
+      } else if (InputActions.down.firing) {
         move.y = 1
       }
       if (move.length > 0) {
         player.action = MoveAction.new(move)
       }
     }
-    pressed = Actions.directions.any {|key| key.down }
+    pressed = InputActions.directions.any {|key| key.down }
 
     _world.update()
+    if (InputActions.inventory.justPressed) {
+      var dummy = _zone.addEntity(Dummy.new())
+      dummy.pos = Vec.new(0, 0)
+    }
     for (event in _zone.events) {
       if (event is EntityAddedEvent) {
         System.print("Entity %(event.id) was added")
