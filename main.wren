@@ -3,10 +3,14 @@ import "math" for Vec, M
 import "./core/main" for ParcelMain
 import "./core/world" for World, Zone
 import "./core/map" for TileMap, Tile
-import "./core/director" for RealTimeStrategy, TurnBasedStrategy, EnergyStrategy
+import "./core/director" for
+  RealTimeStrategy,
+  TurnBasedStrategy,
+  EnergyStrategy
+
+
 import "./player" for PlayerData
 import "./entities" for Player, Dummy
-
 import "./scene" for WorldScene
 
 // World generation code
