@@ -1,4 +1,4 @@
-import "graphics" for ImageData, Canvas
+import "graphics" for ImageData, Canvas, Color
 import "input" for Keyboard
 import "math" for Vec, M
 
@@ -155,15 +155,18 @@ class WorldScene is Scene {
     for (entity in _zone.entities) {
       var sx = entity.pos.x * 8 + X_OFFSET
       var sy = entity.pos.y * 8
-      if (STATIC && entity is Player) {
+      if (entity is Player) {
+        if (!STATIC) {
+          continue
+        }
         // We draw this
         if (_moving) {
           sprites["playerWalk"][F].draw(sx, sy)
         } else {
           sprites["playerStand"][F].draw(sx, sy)
         }
-      } else if (entity is Dummy) {
-        Canvas.print("D", sx, sy, Display.fg)
+      } else {
+        Canvas.print(entity.type.name[0], sx, sy, Color.red)
       }
     }
     // Put a background on the player for readability
