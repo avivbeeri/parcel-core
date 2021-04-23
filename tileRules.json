@@ -1,0 +1,14 @@
+{
+  "void": {
+    "defaultTileIndex": -1,
+    "rules": []
+  },
+  "tile": {
+    "defaultTileIndex": 0,
+    "rules": []
+  },
+  "wall": {
+    "defaultTileIndex": 5,
+    "rules": []
+  }
+}

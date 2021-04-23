@@ -1,9 +1,218 @@
 {
   "display": {
-    "width": 240,
-    "height": 160,
+    "width": 480,
+    "height": 320,
     "foreground": "#FFFFFF",
-    "background": "#262b44",
-    "title": "Untitled Game"
-  }
+    "background": "#181425",
+    "title": "Cartomancer"
+  },
+  "cards": [
+    {
+      "id": "sword",
+      "name": "Sword",
+      "description": "This mighty blade will make you more lethal. \n\nGain +1 ATK for 3 turns.",
+      "tint": 17,
+      "image": "res/img/cards/sword.png",
+      "action": "applyModifier",
+      "target": "self",
+      "params": {
+        "id": "sword",
+        "add": { "atk": 1 },
+        "duration": 3,
+        "positive": true,
+        "responsible": "source"
+      }
+    },
+    {
+      "id": "shadow",
+      "name": "Shadow",
+      "image": "res/img/cards/dark.png",
+      "action": "applyModifier",
+      "description": "Harness the darkness to disorient your foes. \n\nTarget gets -1 ATK and -1 DEF for 2 turns.",
+      "tint": 25,
+      "action": "applyModifier",
+      "params": {
+        "range": 2,
+        "id": "shadow",
+        "add": { "def": -1, "atk": -1 },
+        "duration": 2,
+        "responsible": "target"
+      },
+      "target": "creature"
+    },
+    {
+      "id": "fire",
+      "image": "res/img/cards/fire.png",
+      "name": "Fire",
+      "description": "Launch a ball of flame to vanquish the enemy in your path. \n\nSummons a Fireball which will travel in a direction until it hits something.",
+      "tint": 7,
+      "action": "spawn",
+      "target": "space",
+      "params": {
+        "range": 1,
+        "id": "fireball",
+        "stats": {
+          "atk": 2
+        }
+      }
+    },
+    {
+      "id": "shield",
+      "name": "Shield",
+      "description": "Few can penetrate this shield's legendary protection. \n\nGain +1 DEF for 3 turns.",
+      "image": "res/img/cards/shield.png",
+      "tint": 17,
+      "action": "applyModifier",
+      "target": "self",
+      "params": {
+        "id": "shield",
+        "add": { "def": 1 },
+        "duration": 3,
+        "positive": true,
+        "responsible": "source"
+      }
+    },
+    {
+      "id": "thunder",
+      "name": "Thunder",
+      "image": "res/img/cards/thunder.png",
+      "description": "A bolt of lightning destroys your enemies. \n\nDeals 3 damage to a target.",
+      "tint": 7,
+      "action": "attack",
+      "target": "creature",
+      "params": {
+        "range": 3,
+        "kind": "lightning",
+        "base": 3
+      }
+    },
+    {
+      "id": "light",
+      "name": "Light",
+      "enabled": false,
+      "tint": 25
+    },
+    {
+      "id": "water",
+      "enabled": false,
+      "name": "Water",
+      "tint": 25
+    },
+    {
+      "id": "wind",
+      "name": "Wind",
+      "enabled": false,
+      "tint": 25
+    },
+    {
+      "id": "earth",
+      "enabled": false,
+      "name": "Earth",
+      "tint": 25
+    }
+  ],
+  "entities": [
+    {
+      "id": "sword",
+      "name": "Swordsman",
+      "stats": {
+        "hp": 2,
+        "hpMax": 2,
+        "atk": 1,
+        "def": 0,
+        "speed": 3
+      },
+      "classType": "seeker",
+      "types": [ "enemy", "spawnable" ],
+      "sprite": "sword",
+      "loot": [
+        "card:sword"
+      ]
+    },
+    {
+      "id": "shield",
+      "name": "Shield Bearer",
+      "stats": {
+        "hp": 1,
+        "hpMax": 1,
+        "atk": 1,
+        "def": 1,
+        "speed": 1
+      },
+      "classType": "seeker",
+      "sprite": "shield",
+      "types": [ "enemy" , "spawnable"],
+      "loot": [
+        "card:shield"
+      ]
+    },
+    {
+      "id": "thunder",
+      "stats": {
+        "hp": 1,
+        "hpMax": 1,
+        "atk": 0,
+        "def": 0,
+        "spi": 1,
+        "speed": 2
+      },
+      "classType": "thunder",
+      "sprite": "thunder",
+      "types": [ "enemy", "spawnable" ],
+      "loot": [
+        "card:thunder"
+      ]
+    },
+    {
+      "id": "wizard",
+      "stats": {
+        "hp": 1,
+        "hpMax": 1,
+        "atk": 0,
+        "def": 0,
+        "spi": 1,
+        "speed": 4
+      },
+      "classType": "wizard",
+      "sprite": "wizard",
+      "types": [ "enemy", "spawnable" ],
+      "loot": [
+        "card:fire"
+      ]
+    },
+    {
+      "id": "shadow",
+      "stats": {
+        "hp": 1,
+        "hpMax": 1,
+        "atk": 0,
+        "def": 0,
+        "speed": 2
+      },
+      "classType": "shadow",
+      "sprite": "shadow",
+      "types": [ "enemy", "spawnable" ],
+      "loot": [
+        "card:shadow"
+      ],
+      "effect": {
+        "id": "shadow",
+        "add": { "def": -1, "atk": -1 },
+        "duration": 2,
+        "responsible": "target"
+      }
+    },
+    {
+      "id": "fireball",
+      "stats": {
+        "atk": 1,
+        "speed": 3,
+        "def": 3
+      },
+      "types": [],
+      "classType": "fireball",
+      "sprite": "fireball"
+    }
+  ]
+
 }

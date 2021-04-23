@@ -1,0 +1,23 @@
+{
+  "void": {
+    "defaultTileIndex": -1,
+    "rules": []
+  },
+  "tile": {
+    "defaultTileIndex": 0,
+    "rules": []
+  },
+  "wall": {
+    "defaultTileIndex": 5,
+    "rules": [
+      { "tileIndex": 14, "map": {"s": "void", "n": "tile"} },
+      { "tileIndex": 7, "map": {"e": "void", "w": "tile"} },
+      { "tileIndex": 15, "map": {"w": "wall", "n": "wall"} },
+      { "tileIndex": 13, "map": {"w": "wall", "n": "wall", "e": "wall", "w": "void"} },
+      { "tileIndex": 13, "map": {"e": "tile", "w": "void"} },
+      { "tileIndex": 10, "map": {"s": "wall", "n": "tile"} },
+      { "tileIndex": 10, "map": {"s": "wall", "n": "wall", "e": "wall"} },
+      { "tileIndex": 1, "map": {"s": "tile"} }
+    ]
+  }
+}
