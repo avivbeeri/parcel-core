@@ -6,11 +6,16 @@ class World is DataObject {
     super()
     _worlds = []
     _strategy = strategy
+    _gameover = false
   }
+
+  gameover { _gameover }
+  gameover=(v) { _gameover = v }
 
   pushZone(world) {
     world.parent = this
     _worlds.insert(0, world)
+    _strategy.bind(active)
     return world
   }
   popZone() {
@@ -59,8 +64,9 @@ class Zone is DataObject {
   parent=(v) { _parent = v }
 
   addEntity(tag, entity) {
-    _tagged[tag] = entity
-    return addEntity(entity)
+    addEntity(entity)
+    _tagged[tag] = entity.id
+    return entity
   }
 
   addEntity(entity) {
@@ -68,12 +74,14 @@ class Zone is DataObject {
     _entities.add(entity)
     parent.strategy.onEntityAdd(entity)
 
+    /*
     if (_freeIds.count > 0) {
       entity.id = _freeIds.removeAt(-1)
     } else {
+      */
       entity.id = _nextId
       _nextId = _nextId + 1
-    }
+    // }
     _events.add(EntityAddedEvent.new(entity.id))
 
     return entity
@@ -90,7 +98,7 @@ class Zone is DataObject {
     _events.add(EntityRemovedEvent.new(entity.id))
   }
 
-  getEntityByTag(tag) { _tagged[tag] }
+  getEntityByTag(tag) { getEntityById(_tagged[tag]) }
   getEntityById(id) {
     var ent = _entities.where {|entity| entity.id == id }
     if (ent.count == 1) {

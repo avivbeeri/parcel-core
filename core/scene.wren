@@ -16,5 +16,6 @@ class Ui is GameElement {
 
   ctx { _ctx }
   finished { true }
+  drawDiagetic() {}
 }
 

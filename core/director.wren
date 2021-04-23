@@ -12,11 +12,17 @@ class Director {
   update() {
     world.events.clear()
 
+    if (world.parent.gameover) {
+      return
+    }
+
     // process entities
     processEntities()
+    runPostUpdate()
+  }
 
-    world.postUpdate.each {|hook| hook.update() }
-    world.events.sort {|a, b| a.priority < b.priority}
+  runPostUpdate() {
+    world.postUpdate.each {|hook| hook.update(world) }
   }
 
   processEntities() {}
@@ -24,7 +30,7 @@ class Director {
   onEntityRemove(entity) {}
 }
 
-class RealTimeStrategy is Director {
+class ActionStrategy is Director {
   construct new() { super() }
   processEntities() {
     var actions = world.entities.map {|entity|
@@ -43,10 +49,14 @@ class RealTimeStrategy is Director {
           break
         }
       }
+      action.source.endTurn()
     }
   }
   onEntityAdd(entity) {
-    _entities.sort {|a, b| a.priority < b.priority}
+    if (!world) {
+      Fiber.abort("no world!?!")
+    }
+    world.entities.sort {|a, b| a.priority < b.priority}
   }
 }
 
@@ -60,45 +70,58 @@ class EnergyStrategy is Director {
     _turn = (_turn + 1) % world.entities.count
   }
 
+  currentActor {
+    return world ? world.entities[_turn] : null
+  }
+
   gainEnergy(actor) {
-    actor.priority = actor.priority + (actor["#speed"] || 1)
+    actor.priority = actor.priority + (actor.speed || 1)
     actor.priority = M.min(actor.priority, threshold)
   }
 
   threshold { 12 }
 
-  processEntities() {
+  gameLoop() {
     var actor = world.entities[turn]
     gainEnergy(actor)
     if (actor.priority < threshold) {
       advance()
-      return
+      return true
     }
 
     var action = actor.getAction()
 
     if (!action) {
       // No action given, retry and hope we got input
-      return
+      return false
     }
 
 
     while (true) {
-
+      // System.print("Trying: %(actor): %(action)")
       var result = action.bind(actor).perform()
       if (!result.succeeded) {
         // Action wasn't successful, allow retry
-        return
+        return false
       }
-      System.print("%(actor): %(action)")
-
+      // System.print(result)
       if (!result.alternate) {
         break
       }
       action = result.alternate
     }
     actor.priority = 0
+    actor.endTurn()
+    runPostUpdate()
     advance()
+    return true
+  }
+
+  processEntities() {
+    var advance = true
+    while (advance && !world.parent.gameover) {
+      advance = gameLoop()
+    }
   }
 
   onEntityRemove(pos) {
@@ -140,13 +163,14 @@ class TurnBasedStrategy is Director  {
         // Action wasn't successful, allow retry
         return
       }
-      System.print("%(actor): %(action)")
+      // System.print("%(actor): %(action)")
 
       if (!result.alternate) {
         break
       }
       action = result.alternate
     }
+    actor.endTurn()
     advance()
   }
 

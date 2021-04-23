@@ -1,5 +1,6 @@
 import "math" for Vec
 import "./core/world" for DataObject
+import "./core/action" for Action
 
 class Entity is DataObject {
   construct new() {
@@ -7,6 +8,7 @@ class Entity is DataObject {
     _pos = Vec.new()
     _size = Vec.new(1, 1)
     _vel = Vec.new()
+    _name = null
 
     // Lower is better
     _priority = 0
@@ -30,6 +32,9 @@ class Entity is DataObject {
   priority=(v) { _priority = v }
   priority { _priority }
 
+  // May not always be used, can be override
+  speed { 1 }
+
   move() {
     // pos = pos + vel
     pos.x = pos.x + vel.x
@@ -43,12 +48,16 @@ class Entity is DataObject {
            y <= pos.y + size.y - 1
   }
 
+  notify(event) { notify(ctx, event) }
   notify(ctx, event) { event }
   getAction() { update() }
+  endTurn() {}
+  name { _name || this.type.name }
+  name=(v) { _name = v }
 
-  update() {}
+  update() { Action.none }
   draw() {}
 
-  toString { "%(this.type.name) (id: %(_id))" }
+  toString { "%(name) (id: %(_id))" }
 }
 

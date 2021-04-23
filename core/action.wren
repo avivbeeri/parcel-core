@@ -14,6 +14,7 @@ class ActionResult {
 
   alternate { _alt }
   succeeded { _success }
+  toString { "ActionResult [%(succeeded), %(alternate)]"}
 }
 
 

@@ -12,6 +12,7 @@ class DataObject {
   data { _data }
   [key] { _data[key] }
   [key]=(v) { _data[key] = v }
+  has(prop) { _data.containsKey(prop) && _data[prop] != null }
 }
 
 

@@ -1,19 +1,19 @@
 import "./core/display" for Display
-
+import "./core/config" for Config
 
 class ParcelMain {
-  construct new() {}
   construct new(scene) {
-    push(scene)
+    _initial = scene
+    _args = []
   }
   construct new(scene, args) {
-    push(scene, args)
+    _initial = scene
+    _args = args
   }
 
   init() {
-    import "json" for Json
-    var config = Json.load("config.json")
-    Display.setup(config["display"])
+    Display.setup(Config["display"])
+    push(_initial, _args)
   }
 
   update() {
@@ -23,7 +23,7 @@ class ParcelMain {
     _scene.draw()
   }
 
-  push(scene) { push(scene, null) }
+  push(scene) { push(scene, []) }
   push(scene, args) {
     _scene = scene.new(args)
     _scene.game = this

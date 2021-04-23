@@ -3,6 +3,7 @@ import "math" for Vec, M
 // Converts two integers into a single integer, good for hashing
 // Supports negative numbers too
 class Elegant {
+  static pair(vec) { pair(vec.x, vec.y) }
   static pair(x, y) {
     var xx = x >= 0 ? x * 2 : x * -2 - 1
     var yy = y >= 0 ? y * 2 : y * -2 - 1
