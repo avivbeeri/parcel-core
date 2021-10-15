@@ -1,12 +1,5 @@
-import "graphics" for ImageData, Canvas, Font, Color
 import "./core/action" for Action
-import "./palette" for EDG32, EDG32A
 import "./rng" for RNG
-
-
-var Frame = ImageData.loadFromFile("res/img/card-frame.png")
-
-var DefaultTint = EDG32A[24]
 
 class Card {
   static [id] {
@@ -80,17 +73,6 @@ class Card {
   draw(x, y) {
     x = x.round
     y = y.round
-    Frame.draw(x, y)
-    Canvas.rectfill(x + 8, y + 8, 80, 144, _tint)
-    Canvas.rectfill(x + 8, y + 8, 80, 19, EDG32[14])
-    Canvas.line(x + 8, y + 27, x + 87, y + 27, EDG32[15])
-    var width = Font["quiver16"].getArea(name).x
-    var textLeft = x + 8 + (80 - width) / 2
-    Canvas.print(name, textLeft + 2, y + 10, EDG32[24], "quiver16")
-    Canvas.print(name, textLeft, y + 9, EDG32[19], "quiver16")
-    if (_image) {
-      _image.draw(x, y)
-    }
   }
 
   toString { "%(name)"}

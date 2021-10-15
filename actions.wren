@@ -1,7 +1,6 @@
 import "math" for M, Vec
 import "./core/action" for Action, ActionResult
 import "./events" for CollisionEvent,
-  CommuneEvent,
   MoveEvent,
   AttackEvent,
   PickupEvent,

@@ -1,5 +1,5 @@
 import "math" for M, Vec
-import "graphics" for Canvas
+import "graphics" for Canvas, Color
 import "input" for Mouse
 import "./core/display" for Display
 import "./core/scene" for Ui
@@ -12,13 +12,8 @@ import "./widgets" for Button
 var scale = 1
 var TILE_SIZE = 16 * scale
 
-class Space {
-  construct wrap(vec) {
-    _pos = vec
-  }
-  pos { _pos }
-  size { Vec.new(1, 1) }
-}
+var Bg = EDG32[2]
+var Red = EDG32[26]
 
 class CombatTargetSelector is Ui {
   construct new(ctx, view) {
@@ -90,7 +85,7 @@ class CombatTargetSelector is Ui {
   }
 }
 
-class Menu is Ui {
+class SelectionMenu is Ui {
   construct new(ctx, actions) {
     super(ctx)
     if (actions.count % 2 != 0) {
@@ -144,3 +139,68 @@ class Menu is Ui {
 
   finished { _done }
 }
+
+
+class SuccessMessage is Ui {
+  construct new(ctx) {
+    super(ctx)
+  }
+  finished { false }
+
+  update() {
+    if (InputActions.confirm.justPressed) {
+      ctx.game.push(WorldScene, [ WorldGenerator.generate() ])
+    }
+  }
+
+  draw() {
+    Canvas.rectfill(20, 20, Canvas.width - 40, Canvas.height - 40, Bg)
+    var area = Display.printCentered("Congratulations!", 30, Color.black, "quiver64")
+    Display.printCentered("You captured all the cards!", 30 + area.y + 40, Color.black, "m5x7")
+
+    Display.printCentered("Press START to play again.", Canvas.height - 40, Color.black, "m5x7")
+  }
+}
+
+class FailureMessage is Ui {
+  construct new(ctx) {
+    super(ctx)
+  }
+  finished { false }
+  update() {
+    if (InputActions.confirm.justPressed) {
+      ctx.game.push(WorldScene, [ WorldGenerator.generate() ])
+    }
+  }
+
+  draw() {
+    Canvas.rectfill(20, 20, Canvas.width - 40, Canvas.height - 40, Color.black)
+    Canvas.rect(20, 20, Canvas.width - 40, Canvas.height - 40, Red)
+    var area = Display.print("You were defeated", {
+      "position": Vec.new(30, 30),
+      "font": "quiver64",
+      "align": "center",
+      "color": EDG32[19],
+      "size": Vec.new(Canvas.width - 40, Canvas.height - 40),
+      "overflow": true
+    })
+    Display.printCentered("Press START to try again.", Canvas.height - 40, Color.white, "m5x7")
+  }
+}
+
+class Pause is Ui {
+  construct new(ctx, time) {
+    super(ctx)
+    _end = time
+    _t = 0
+  }
+
+  finished { _t >= _end}
+  update() {
+    _t = _t + 1
+  }
+}
+
+
+import "./generator" for WorldGenerator
+import "./scene/game" for WorldScene

@@ -9,7 +9,6 @@ import "./core/scene" for Scene, Ui
 import "./core/event" for EntityRemovedEvent, EntityAddedEvent
 
 import "./keys" for InputGroup, InputActions
-import "./menu" for Menu, CombatTargetSelector
 import "./system/combat" for AttackResult
 import "./events" for CollisionEvent, MoveEvent, GameEndEvent, AttackEvent, LogEvent, ModifierEvent, PickupEvent
 import "./actions" for MoveAction, RestAction
@@ -498,7 +497,8 @@ import "./effects" for
   EntityBulkLerp,
   EntityRemove,
   EntityAdd,
+  Animation
+import "./menu" for CombatTargetSelector,
   SuccessMessage,
   FailureMessage,
-  Animation,
   Pause
