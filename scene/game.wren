@@ -9,14 +9,14 @@ import "./core/scene" for Scene, Ui
 import "./core/event" for EntityRemovedEvent, EntityAddedEvent
 
 import "./keys" for InputGroup, InputActions
-import "./menu" for Menu, CardTargetSelector, CombatTargetSelector
-import "./combat" for AttackResult
-import "./events" for CollisionEvent, MoveEvent, GameEndEvent, AttackEvent, LogEvent, CommuneEvent, ModifierEvent, PickupEvent
-import "./actions" for MoveAction, RestAction, PlayCardAction, CommuneAction
+import "./menu" for Menu, CombatTargetSelector
+import "./system/combat" for AttackResult
+import "./events" for CollisionEvent, MoveEvent, GameEndEvent, AttackEvent, LogEvent, ModifierEvent, PickupEvent
+import "./actions" for MoveAction, RestAction
 import "./entity/all" for Player, Dummy, Collectible, Creature
 
 import "./sprites" for StandardSpriteSet as Sprites
-import "./log" for Log
+import "./system/log" for Log
 
 import "./widgets" for Button
 import "./scene/autotile" for AutoTile
@@ -123,7 +123,6 @@ class WorldScene is Scene {
 
     _selectedEntityId = null
 
-    _reshuffleButton = Button.new("Commune", Vec.new(416, CARD_UI_TOP + 4), Vec.new(7 * 8 + 4, 16))
     _allowInput = true
 
     _entityViews = {}
@@ -168,10 +167,6 @@ class WorldScene is Scene {
     var pressed = false
 
     if (player && _allowInput) {
-      if (InputActions.commune.justPressed || _reshuffleButton.update().clicked) {
-        player.action = CommuneAction.new()
-      }
-
       if (InputActions.nextTarget.justPressed) {
         _diageticUi.add(CombatTargetSelector.new(_zone, this))
         return
@@ -179,47 +174,12 @@ class WorldScene is Scene {
 
 
       var mouse = Mouse.pos
-      if (mouse.y < CARD_UI_TOP) {
-        var mouseEntities = _zone.getEntitiesAtTile(screenToWorld(mouse))
-        if (mouseEntities.count > 0) {
-          _selectedEntityId = mouseEntities.toList[0].id
-        } else {
-          _selectedEntityId = null
-        }
+      var mouseEntities = _zone.getEntitiesAtTile(screenToWorld(mouse))
+      if (mouseEntities.count > 0) {
+        _selectedEntityId = mouseEntities.toList[0].id
+      } else {
+        _selectedEntityId = null
       }
-
-      // Play a card
-      var hand = player["hand"]
-      var handLeft = 5 + 59
-      var maxHandWidth = 416 - (handLeft)
-      var slots = getHandSlots(hand, handLeft, CARD_UI_TOP + 12, maxHandWidth)
-      var index = 0
-      var hover = null
-      for (slot in slots) {
-        var card = slot[0]
-        var pos = slot[1]
-        if (mouse.y >= pos.y && mouse.x >= pos.x && mouse.x < pos.z) {
-          hover = slot
-          var shift = InputActions.shift.down
-
-          if (Mouse["left"].justPressed && !shift) {
-            playCard(slots, index)
-          } else if (Mouse["right"].justPressed || (Mouse["left"].justPressed && shift)) {
-            displayCardDescription(card.id)
-          }
-        }
-
-        if ((index+1) < InputActions.options.count && InputActions.options[index+1].justPressed) {
-          if (InputActions.shift.down) {
-            displayCardDescription(card.id)
-          } else {
-            hover = playCard(slots, index)
-          }
-        }
-        index = index + 1
-      }
-      _selected = _allowInput && _log.hidden ? hover : null
-
 
       // Allow movement
       if (!player.action && !_tried) {
@@ -280,13 +240,6 @@ class WorldScene is Scene {
           } else {
             // TOOD: Add more context about cause of failure
             _ui.add(FailureMessage.new(this))
-          }
-        } else if (event is CommuneEvent) {
-          if (event.success) {
-            System.print("You communed with the cards and their magic is restored.")
-            _diageticUi.add(Animation.new(this, event.source.pos * TILE_SIZE, Sprites["commune"], 5))
-          } else {
-            System.print("You cannot commune right now.")
           }
         } else if (event is ModifierEvent) {
           if (isOnScreen(event.target.pos)) {
@@ -434,45 +387,6 @@ class WorldScene is Scene {
       Canvas.print(text, 8, 2, EDG32[19], "m5x7")
 
       drawEntityMods(player, Vec.new(Canvas.width - 8 - TILE_SIZE, 2), Vec.new(Canvas.width - 8 - 3 * TILE_SIZE, 2), true)
-
-      // Draw the card shelf
-      Canvas.rectfill(0, CARD_UI_TOP, Canvas.width, Canvas.height - CARD_UI_TOP, EDG32[28])
-      Canvas.line(0, CARD_UI_TOP, Canvas.width, CARD_UI_TOP, EDG32[29], 2)
-
-      var deck = player["deck"]
-      var left = 5
-      var top = CARD_UI_TOP + 4
-      drawPile(deck, 5, top, false)
-      drawPile(player["discard"], 416, top, true)
-
-      var hand = player["hand"]
-      var handLeft = 5 + 59
-      var maxHandWidth = 416 - (handLeft)
-      var slots = getHandSlots(hand, handLeft, top + 8, maxHandWidth)
-      for (slot in slots) {
-        var card = slot[0]
-        var pos = slot[1]
-        if (_selected && Object.same(_selected[0], card)) {
-        } else {
-         card.draw(pos.x, pos.y)
-        }
-      }
-
-      if (deck.isEmpty && hand.isEmpty) {
-        _reshuffleButton.draw()
-      }
-
-      if (_selected) {
-        var card = _selected[0]
-        var pos =  _selected[1]
-        card.draw(pos.x, pos.y - 32)
-        if (!_allowInput) {
-          Canvas.rectfill(pos.x, pos.y - 32, 96, CARD_UI_TOP - (pos.y - 32), EDG32A[27])
-        }
-      }
-      if (!_allowInput) {
-        Canvas.rectfill(0, CARD_UI_TOP, Canvas.width, Canvas.height - CARD_UI_TOP, EDG32A[27])
-      }
     }
 
     if (_selectedEntityId) {
@@ -503,85 +417,10 @@ class WorldScene is Scene {
     }
   }
 
-  drawPile(pile, left, top, shade) {
-    var mouse = Mouse.pos
-    var hover = null
-    var width = 59
-    var height = 89
-    var border = 3
-    Canvas.rect(left, top, width, height, EDG32[27])
-    if (!pile.isEmpty) {
-      var total = M.min(4, (pile.count / 3).ceil)
-      for (offset in 1..total) {
-        if (offset < total) {
-        Sprites["cardback"]
-        .transform({ "mode": "MONO", "foreground": EDG32[3 + total - offset], "background": Color.none })
-        .draw(left + 7 - offset, top + 6 - offset)
-        } else {
-          Sprites["cardback"].draw(left + 7 - offset, top + 6 - offset)
-        }
-      }
-    }
-    if (shade) {
-      Canvas.rectfill(left+1, top+1, width-2, height-2, EDG32A[27])
-    }
-    if (mouse.x >= left && mouse.x < left + width && mouse.y >= top && mouse.y < top + height) {
-      var font = Font["m5x7"]
-      var area = font.getArea(pile.count.toString)
-
-      var textLeft = left + ((width - area.x) / 2)
-      var textTop = top + ((height - area.y) / 2)
-      Canvas.rectfill(textLeft - border, textTop - border, area.x + border * 2, area.y + border * 2, EDG32[21])
-      font.print(pile.count.toString, textLeft + 1, textTop - 2, EDG32[23])
-    }
-  }
-
-  getHandSlots(hand, handLeft, top, maxHandWidth) {
-      var cardWidth = 96
-      var spacingCount = M.max(0, hand.count - 1)
-      var spacing = 6
-      var handWidth = (hand.count * cardWidth) + spacingCount * spacing
-      var handStep
-      var adjust
-      if (handWidth < maxHandWidth) {
-        handStep = (handWidth / hand.count).floor
-        adjust = (maxHandWidth - handWidth) / 2
-      } else {
-        maxHandWidth = maxHandWidth - cardWidth
-        handStep = ((maxHandWidth) / (hand.count)).ceil
-        spacing = 0
-        adjust = handStep / 2
-      }
-
-      return (0...hand.count).map {|i|
-        var x = handLeft + adjust + handStep * i + spacing / 2
-        return [ hand[i], Vec.new(x, top, i < hand.count - 1 ? x + handStep : x + cardWidth, 160) ]
-      }
-  }
-
-
-  displayCardDescription(cardId) {
-    _ui.add(CardDialog.new(this, cardId))
-  }
-
-  playCard(slots, index) {
-    var player = _world.active.getEntityByTag("player")
-    slots = slots.toList
-    var card = slots[index][0]
-    if (!card.requiresInput) {
-      player.action = PlayCardAction.new(index)
-    } else {
-      // get inputs
-      _diageticUi.add(CardTargetSelector.new(_zone, this, card, index))
-      return slots[index]
-    }
-  }
-
   center {
     var cx = (Canvas.width - X_OFFSET - 20) / 2
     var cy = (Canvas.height - CARD_UI_TOP) / 2 + TILE_SIZE * 4
     return Vec.new(cx, cy)
-
   }
 
   screenToWorld(pos) {
@@ -662,5 +501,4 @@ import "./effects" for
   SuccessMessage,
   FailureMessage,
   Animation,
-  CardDialog,
   Pause

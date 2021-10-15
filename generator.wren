@@ -7,7 +7,15 @@ import "core/director" for
   ActionStrategy,
   TurnBasedStrategy,
   EnergyStrategy
+
+import "factory" for EntityFactory
+
+import "./core/config" for Config
 import "./rng" for RNG
+
+var SPAWN_DIST = [ 0, 0, 1, 1, 1, 1, 1, 1, 2, 2]
+var SPAWNABLES = Config["entities"].where {|config| config["types"].contains("spawnable") }.toList
+var ROOM_COUNT = 4
 
 class Room is Vec {
   construct new(x, y, w, h) {

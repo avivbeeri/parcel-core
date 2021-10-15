@@ -4,7 +4,7 @@ import "./core/action" for Action
 import "./core/config" for Config
 import "./core/dir" for NSEW
 
-import "./combat" for Attack, AttackType
+import "./system/combat" for Attack, AttackType
 import "./actions" for MoveAction, AttackAction, DespawnAction, MultiAction, SpawnAction
 import "./rng" for RNG
 

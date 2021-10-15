@@ -19,7 +19,7 @@ class Shadow is StackCreature {
   }
 }
 
-import "./combat" for AttackType
-import "./stats" for Modifier
+import "./system/combat" for AttackType
+import "./system/stats" for Modifier
 import "./actions" for ApplyModifierAction
 import "./entity/behaviour" for RangedBehaviour, SeekBehaviour, WaitBehaviour

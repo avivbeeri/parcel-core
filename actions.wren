@@ -8,7 +8,7 @@ import "./events" for CollisionEvent,
   ModifierEvent,
   LogEvent
 
-import "./combat" for Attack, AttackResult
+import "./system/combat" for Attack, AttackResult
 
 class CommuneAction is Action {
   construct new() {

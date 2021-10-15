@@ -1,6 +1,6 @@
 import "core/entity" for Entity
 import "core/dataobject" for DataObject
-import "./stats" for StatGroup
+import "./system/stats" for StatGroup
 
 class Creature is Entity {
   construct new(config) {

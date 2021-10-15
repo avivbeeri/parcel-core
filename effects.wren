@@ -7,8 +7,6 @@ import "./core/scene" for Ui
 import "./core/display" for Display
 import "./widgets" for Button
 
-import "./deck" for Card
-
 class EntityAdd is Ui {
   construct new(ctx, id) {
     super(ctx)
@@ -195,52 +193,6 @@ class Animation is Ui {
     var f = (M.min(_end - 1, _t) / _frameTime).floor
     _sprites[f].draw(_location.x, _location.y)
     return true
-  }
-}
-class CardDialog is Ui {
-  construct new(ctx, cardId) {
-    super(ctx)
-    _card = Card[cardId]
-    _done = false
-    _closeButton = Button.new("X", Vec.new(Canvas.width * (0.25 + 1/3) + 96, Canvas.height / 4 - 15), Vec.new(15, 15))
-  }
-  finished { _done }
-  update() {
-    _done = InputActions.cancel.justPressed || _closeButton.update().clicked
-  }
-
-  draw() {
-    Canvas.rectfill(0,0, Canvas.width, Canvas.height, EDG32A[25])
-    var x = Canvas.width / 4
-    var y0 = Canvas.height / 4
-    var y = y0
-
-    var h = Canvas.height / 2
-    var w = Canvas.width / 3
-    var windowWidth = Canvas.width / 3 + 96
-    var b = 4
-
-    Canvas.rectfill(x, y, windowWidth, h, EDG32[3])
-
-    y = y + b
-    var titleArea = Display.print(_card.name, {
-      "position": Vec.new(x + b, y),
-      "font": "m5x7",
-      "color": EDG32[24],
-      "size": Vec.new(w - b * 2, h - b * 2),
-    })
-
-    y = y + titleArea.y + b
-    var area = Display.print(_card.description, {
-      "position": Vec.new(x + b, y),
-      "font": "m5x7",
-      "align": "left",
-      "color": EDG32[24],
-      "size": Vec.new(w - b * 2, h - 8 - b * 2),
-      "overflow": true
-    })
-    _card.draw(area.x + x + b * 2, y0)
-    _closeButton.draw()
   }
 }
 

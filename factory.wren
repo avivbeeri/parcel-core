@@ -1,10 +1,10 @@
 import "./core/action" for Action
 import "./actions" for ApplyModifierAction, AttackAction, SpawnAction
-import "./stats" for Modifier
+import "./system/stats" for Modifier
 import "./core/config" for Config
 
 
-import "./combat" for Attack, AttackType
+import "./system/combat" for Attack, AttackType
 
 class CardActionFactory {
   static prepare(card, source, target) {

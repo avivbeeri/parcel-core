@@ -27,6 +27,6 @@ class Fireball is StackCreature {
   }
 }
 
-import "./combat" for AttackType
+import "./system/combat" for AttackType
 import "./events" for AttackEvent
 import "./entity/behaviour" for ProjectileBehaviour

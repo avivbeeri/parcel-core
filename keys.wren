@@ -15,6 +15,9 @@ var RIGHT_KEY = InputGroup.new([
   Keyboard["right"], Keyboard["d"]
 ])
 
+var REST_KEY = InputGroup.new([
+  Keyboard["backspace"], Keyboard["escape"]
+])
 var CANCEL_KEY = InputGroup.new([
   Keyboard["backspace"], Keyboard["escape"]
 ])
@@ -29,6 +32,9 @@ var INTERACT_KEY = InputGroup.new([
 
 var INVENTORY_KEY = InputGroup.new([
   Keyboard["i"]
+])
+var TARGET_KEY = InputGroup.new([
+  Keyboard["tab"]
 ])
 
 
@@ -47,4 +53,8 @@ class InputActions {
   static interact { INTERACT_KEY }
   static confirm { CONFIRM_KEY }
   static cancel { CANCEL_KEY }
+  static nextTarget { TARGET_KEY }
+  static rest { TARGET_KEY }
+
+
 }

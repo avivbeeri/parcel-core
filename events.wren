@@ -1,5 +1,5 @@
 import "./core/event" for Event
-import "./combat" for AttackResult
+import "./system/combat" for AttackResult
 
 class GameEndEvent is Event {
   construct new(won) {

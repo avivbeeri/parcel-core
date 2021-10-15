@@ -3,7 +3,7 @@ import "./core/action" for Action
 import "./core/entity" for Entity
 import "./core/graph" for WeightedZone, BFS, AStar, DijkstraSearch
 import "./actions" for MoveAction
-import "./stats" for StatGroup
+import "./system/stats" for StatGroup
 import "./entity/creature" for Creature
 import "./events" for LogEvent, PickupEvent
 
