@@ -32,25 +32,6 @@ class RemoveDefeated {
   }
 }
 
-
-class AutoDraw {
-  static update(ctx) {
-    var player = ctx.getEntityByTag("player")
-    if (player) {
-      var deck = player["deck"]
-      var hand = player["hand"]
-      while (hand.count < 3 && !deck.isEmpty) {
-        var card = deck.drawCard()
-        if (card) {
-          System.print("Drew: %(card.name)")
-          hand.insert(0, card)
-          // TODO: Emit CardDrawEvent for UI
-        }
-      }
-    }
-  }
-}
-
 import "./events" for GameEndEvent
 import "./entity/collectible" for Collectible
 import "./entity/creature" for Creature

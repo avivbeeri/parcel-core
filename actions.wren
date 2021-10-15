@@ -101,21 +101,6 @@ class AttackAction is Action {
   location { _location }
 
   perform() {
-    /*
-    ----- MANA DISABLE --------
-    if (_attack.needsMana &&
-      source.has("stats") &&
-      source["stats"].has("mana")) {
-
-      if (source["stats"].get("mana") <= 0) {
-        // TODO: Assert?!
-        return ActionResult.failure
-      }
-      source["stats"].decrease("mana", 1)
-    }
-    */
-
-
     var location = _location
     var occupying = ctx.getEntitiesAtTile(location.x, location.y).where {|entity| entity.has("stats") }
 

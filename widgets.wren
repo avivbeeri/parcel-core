@@ -1,9 +1,9 @@
 import "graphics" for Canvas
 import "input" for Mouse
-import "./core/scene" for Ui
+import "./core/scene" for Ui, GameElement
 import "./palette" for EDG32, EDG32A
 
-class Widget {}
+class Widget is GameElement {}
 class Button is Widget {
   construct new(text, pos, size) {
     _text = text

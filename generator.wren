@@ -10,7 +10,6 @@ import "core/director" for
 
 import "logic" for RemoveDefeated, GameEndCheck
 
-
 import "./core/config" for Config
 import "./rng" for RNG
 
