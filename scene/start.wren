@@ -1,12 +1,6 @@
-import "input" for Keyboard
-import "graphics" for Canvas, Color, Font
-import "./palette" for EDG32
 
 import "./core/scene" for Scene
-import "./core/display" for Display
 
-import "./scene/game" for WorldScene
-import "./generator" for WorldGenerator
 
 
 
@@ -44,3 +38,9 @@ class StartScene is Scene {
   }
 }
 
+import "input" for Keyboard
+import "graphics" for Canvas, Color, Font
+import "./palette" for EDG32
+import "./generator" for WorldGenerator
+import "./scene/game" for WorldScene
+import "./core/display" for Display

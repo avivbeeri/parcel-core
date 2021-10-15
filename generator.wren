@@ -8,13 +8,15 @@ import "core/director" for
   TurnBasedStrategy,
   EnergyStrategy
 
-import "factory" for EntityFactory
+import "logic" for RemoveDefeated, GameEndCheck
+
 
 import "./core/config" for Config
 import "./rng" for RNG
 
 var SPAWN_DIST = [ 0, 0, 1, 1, 1, 1, 1, 1, 2, 2]
 var SPAWNABLES = Config["entities"].where {|config| config["types"].contains("spawnable") }.toList
+System.print(SPAWNABLES)
 var ROOM_COUNT = 4
 
 class Room is Vec {
@@ -61,6 +63,8 @@ class GrowthGenerator {
 
     // Order is important!!
     // Put postUpdate here
+    zone.postUpdate.add(RemoveDefeated)
+    zone.postUpdate.add(GameEndCheck)
     // -------------------
 
 
@@ -267,4 +271,5 @@ class TestGenerator {
   }
 }
 
-import "./entity/all" for Player
+import "./entity/player" for Player
+import "factory" for EntityFactory

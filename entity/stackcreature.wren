@@ -1,5 +1,4 @@
 import "math" for Vec
-import "./core/action" for Action
 import "./entity/creature" for Creature
 
 class StackCreature is Creature {
@@ -24,3 +23,4 @@ class StackCreature is Creature {
   }
 }
 
+import "./core/action" for Action

@@ -10,41 +10,6 @@ import "./events" for CollisionEvent,
 
 import "./system/combat" for Attack, AttackResult
 
-class CommuneAction is Action {
-  construct new() {
-    super()
-  }
-
-  perform() {
-    /*
-    if (source.has("stats") &&
-        source["stats"].has("mana")) {
-
-      if (source["stats"].get("mana") < source["stats"].get("manaMax")) {
-        // TODO: Assert?!
-        ctx.events.add(CommuneEvent.new(source, false))
-        return ActionResult.failure
-      }
-      source["stats"].set("mana", -1)
-    }
-    */
-    var discard = source["discard"]
-    var deck = source["deck"]
-    var success = (deck.count == 0 && source["hand"].count == 0)
-    if (success) {
-
-      deck.addToBottom(discard)
-      deck.shuffle()
-      source["discard"] = []
-
-      source["hand"] = deck.drawCards(3)
-    }
-    ctx.events.add(CommuneEvent.new(source, success))
-
-    return ActionResult.success
-  }
-}
-
 class RestAction is Action {
   construct new() {
     super()
@@ -205,14 +170,10 @@ class PickupAction is Action {
       var kind = item[0]
       var id = item[1]
 
-      var event = source.notify(PickupEvent.new(source, Card[id]))
+      var event = source.notify(PickupEvent.new(source, "card"))
       ctx.events.add(event)
 
-      if (kind == "card") {
-        if (source.has("deck")) {
-          source["deck"].addToBottom(Card[id])
-        }
-      } else if (source.has("inventory")) {
+      if (source.has("inventory")) {
         source["inventory"].add(entity.item)
       }
       ctx.removeEntity(entity)
@@ -221,58 +182,6 @@ class PickupAction is Action {
     return ActionResult.success
   }
 
-}
-
-class PlayCardAction is Action {
-  construct new(handIndex) {
-    super()
-    _handIndex = handIndex
-    _target = null
-  }
-
-  construct new(handIndex, target) {
-    super()
-    _handIndex = handIndex
-    _target = target
-  }
-
-  perform() {
-    /*
-    if (!source.has("hand") || source.has("stats") && source["stats"].get("mana") <= 0) {
-      // TODO: Assert?!
-      return ActionResult.failure
-    }
-    */
-
-    var hand = source["hand"]
-    var selectedCard = hand.removeAt(_handIndex)
-    var result = ActionResult.failure
-    if (selectedCard) {
-      if (!_target) {
-        // Auto-select target
-        // based on card data
-        if (selectedCard.target == "self") {
-          _target = source
-        }
-      }
-
-      var cardAction = (CardActionFactory.prepare(selectedCard, source, _target))
-      result = cardAction.bind(source).perform()
-      // result = ActionResult.alternate(CardActionFactory.prepare(selectedCard, _target))
-      if (result.succeeded) {
-        ctx.events.add(LogEvent.new("%(source) played the '%(selectedCard.name)' card"))
-        var discard = source["discard"]
-        discard.add(selectedCard)
-        source["stats"].decrease("mana", 2)
-      }
-    }
-
-    if (!result.succeeded) {
-      hand.insert(_handIndex, selectedCard)
-    }
-
-    return result
-  }
 }
 
 class ApplyModifierAction is Action {
@@ -399,5 +308,3 @@ class MultiAction is Action {
 
 
 import "./entity/collectible" for Collectible
-import "./factory" for CardActionFactory
-import "./deck" for Card

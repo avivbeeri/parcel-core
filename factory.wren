@@ -1,11 +1,3 @@
-import "./core/action" for Action
-import "./actions" for ApplyModifierAction, AttackAction, SpawnAction
-import "./system/stats" for Modifier
-import "./core/config" for Config
-
-
-import "./system/combat" for Attack, AttackType
-
 class CardActionFactory {
   static prepare(card, source, target) {
     var actionClass
@@ -53,6 +45,7 @@ class CardActionFactory {
 class EntityFactory {
   static prepare(config) {
     var classType = config["classType"]
+    System.print(config)
     if (classType == "sword") {
       return Sword.new(config)
     }
@@ -81,6 +74,11 @@ class EntityFactory {
   }
 }
 
+import "./core/action" for Action
+import "./actions" for ApplyModifierAction, AttackAction, SpawnAction
+import "./system/stats" for Modifier
+import "./core/config" for Config
+import "./system/combat" for Attack, AttackType
 import "./entity/all" for Sword,
   Shield,
   Creature,
