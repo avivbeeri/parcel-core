@@ -12,7 +12,7 @@ import "./keys" for InputGroup, InputActions
 import "./system/combat" for AttackResult
 import "./events" for CollisionEvent, MoveEvent, GameEndEvent, AttackEvent, LogEvent, ModifierEvent, PickupEvent
 import "./actions" for MoveAction, RestAction
-import "./entity/all" for Player, Dummy, Collectible, Creature
+import "./entity/all" for Player, Collectible, Creature
 
 import "./sprites" for StandardSpriteSet as Sprites
 import "./system/log" for Log
