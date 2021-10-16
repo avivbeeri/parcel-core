@@ -8,23 +8,6 @@
   },
   "entities": [
     {
-      "id": "sword",
-      "name": "Swordsman",
-      "stats": {
-        "hp": 2,
-        "hpMax": 2,
-        "atk": 1,
-        "def": 0,
-        "speed": 3
-      },
-      "classType": "seeker",
-      "types": [ "enemy", "spawnable" ],
-      "sprite": "sword",
-      "loot": [
-        "card:sword"
-      ]
-    },
-    {
       "id": "shield",
       "name": "Shield Bearer",
       "stats": {
@@ -40,73 +23,6 @@
       "loot": [
         "card:shield"
       ]
-    },
-    {
-      "id": "thunder",
-      "stats": {
-        "hp": 1,
-        "hpMax": 1,
-        "atk": 0,
-        "def": 0,
-        "spi": 1,
-        "speed": 2
-      },
-      "classType": "thunder",
-      "sprite": "thunder",
-      "types": [ "enemy", "spawnable" ],
-      "loot": [
-        "card:thunder"
-      ]
-    },
-    {
-      "id": "wizard",
-      "stats": {
-        "hp": 1,
-        "hpMax": 1,
-        "atk": 0,
-        "def": 0,
-        "spi": 1,
-        "speed": 4
-      },
-      "classType": "wizard",
-      "sprite": "wizard",
-      "types": [ "enemy", "spawnable" ],
-      "loot": [
-        "card:fire"
-      ]
-    },
-    {
-      "id": "shadow",
-      "stats": {
-        "hp": 1,
-        "hpMax": 1,
-        "atk": 0,
-        "def": 0,
-        "speed": 2
-      },
-      "classType": "shadow",
-      "sprite": "shadow",
-      "types": [ "enemy", "spawnable" ],
-      "loot": [
-        "card:shadow"
-      ],
-      "effect": {
-        "id": "shadow",
-        "add": { "def": -1, "atk": -1 },
-        "duration": 2,
-        "responsible": "target"
-      }
-    },
-    {
-      "id": "fireball",
-      "stats": {
-        "atk": 1,
-        "speed": 3,
-        "def": 3
-      },
-      "types": [],
-      "classType": "fireball",
-      "sprite": "fireball"
     }
   ]
 
