@@ -10,7 +10,13 @@ import "./core/event" for EntityRemovedEvent, EntityAddedEvent
 
 import "./keys" for InputGroup, InputActions
 import "./system/combat" for AttackResult
-import "./events" for CollisionEvent, MoveEvent, GameEndEvent, AttackEvent, LogEvent, ModifierEvent, PickupEvent
+import "./events" for CollisionEvent,
+  MoveEvent,
+  GameEndEvent,
+  AttackEvent,
+  LogEvent,
+  ModifierEvent,
+  PickupEvent
 import "./actions" for MoveAction, RestAction
 import "./entity/all" for Player, Collectible, Creature
 
@@ -27,21 +33,16 @@ var F = 0
 
 var DEBUG = false
 
-
 var SCALE = 1
 var TILE_SIZE = 16 * SCALE
-var CARD_UI_TOP = 224
 var X_OFFSET = 0
 
 
 class WorldScene is Scene {
   construct new(args) {
-    // Args are currently unused.
     _log = Log.new()
 
     _camera = Vec.new()
-    _moving = false
-    _tried = false
     _ui = []
     _diageticUi = []
 
@@ -94,7 +95,6 @@ class WorldScene is Scene {
       return
     }
 
-    _moving = false
 
     var pressed = false
 
@@ -114,7 +114,7 @@ class WorldScene is Scene {
       }
 
       // Allow movement
-      if (!player.action && !_tried) {
+      if (!player.action) {
         if (InputActions.rest.firing) {
           player.action = RestAction.new()
         } else {
@@ -141,7 +141,6 @@ class WorldScene is Scene {
     for (event in _zone.events) {
       if (event is MoveEvent) {
         if (event.target is Player) {
-          _moving = true
           _lastPosition = player.pos
         }
         if (isOnScreen(event.target.pos)) {
@@ -179,10 +178,6 @@ class WorldScene is Scene {
           }
 
         } else if (event is PickupEvent) {
-          if (event.source is Player) {
-            _tried = true
-            _moving = false
-          }
         } else if (event is AttackEvent) {
           var playerIsTarget = event.target is Player
           if (isOnScreen(event.target.pos)) {
@@ -201,25 +196,14 @@ class WorldScene is Scene {
             if (playerIsTarget) {
               // _diageticUi.add(Pause.new(this, 15))
             }
-            if (event.source is Player) {
-              _tried = true
-              _moving = false
-            }
           }
         } else if (event is LogEvent) {
           _log.print(event.text)
         } else if (event is CollisionEvent) {
           if (isOnScreen(event.source.pos)) {
-            if (event.source is Player) {
-              _tried = true
-              _moving = false
-            }
           }
         }
       }
-    }
-    if (!pressed) {
-      _tried = false
     }
   }
 
@@ -337,7 +321,7 @@ class WorldScene is Scene {
     }
 
     // TODO: Enforce priority for UI effects better
-    _log.draw(4, CARD_UI_TOP + 2)
+    _log.draw(4, 224 + 2)
 
     if (_diageticUi.isEmpty) {
       for (ui in _ui) {
@@ -351,7 +335,7 @@ class WorldScene is Scene {
 
   center {
     var cx = (Canvas.width - X_OFFSET - 20) / 2
-    var cy = (Canvas.height - CARD_UI_TOP) / 2 + TILE_SIZE * 4
+    var cy = (Canvas.height - TILE_SIZE) / 2
     return Vec.new(cx, cy)
   }
 
@@ -368,7 +352,7 @@ class WorldScene is Scene {
 
   isOnScreen(worldPos) {
     var screenPos = worldToScreen(worldPos)
-    return (screenPos.x >= 0 && screenPos.x < Canvas.width && screenPos.y >= 21 && screenPos.y < CARD_UI_TOP)
+    return (screenPos.x >= 0 && screenPos.x < Canvas.width && screenPos.y >= 0 && screenPos.y < Canvas.height)
   }
 
   drawEntityMods(entity, iconPos, descriptionPos, rightAlign) {
