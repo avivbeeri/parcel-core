@@ -5,7 +5,7 @@ import "math" for Vec, M
 import "./palette" for EDG32, EDG32A
 
 import "./core/display" for Display
-import "./core/scene" for Scene, Ui
+import "./core/scene" for Scene, Ui, View
 import "./core/event" for EntityRemovedEvent, EntityAddedEvent
 
 import "./keys" for InputGroup, InputActions
@@ -40,79 +40,28 @@ var X_OFFSET = 0
 
 class WorldScene is Scene {
   construct new(args) {
-    _log = Log.new()
-
-    _camera = Vec.new()
-    _ui = []
-    _diageticUi = []
-
+    super(args)
     _world = args[0]
-    var player = _world.active.getEntityByTag("player")
-
-    _camera.x = player.pos.x * TILE_SIZE
-    _camera.y = player.pos.y * TILE_SIZE
-    _lastPosition = player.pos
-    _selected = null
-
-    _selectedEntityId = null
-
-    _allowInput = true
-
-    _entityViews = {}
-    _world.active.entities.each {|entity| _entityViews[entity.id] = EntityView.new(_world.active, this, entity.id) }
+    _zone = _world.active
+    addView(WorldRenderer.new(this, args))
   }
 
-
   world { _world }
-  camera { _camera }
-  camera=(v) { _camera = v }
+
   update() {
-    if (Keyboard["l"].justPressed) {
-      _log.toggle()
-    }
     _zone = _world.active
-    T = T + (1/60)
-    F = (T * 2).floor % 2
-
-    for (view in _entityViews.values) {
-      view.update()
-    }
-
+    super.update()
 
     var player = _zone.getEntityByTag("player")
     if (player) {
-      _lastPosition = player.pos
-      _allowInput = (_world.strategy.currentActor is Player) && _world.strategy.currentActor.priority >= 12
-      var playerView = _entityViews[player.id]
-      _camera.x = playerView.pos.x
-      _camera.y = playerView.pos.y
-    }
-
-    _selected = _allowInput && _log.hidden ? _selected : null
-
-    if (updateAllUi()) {
-      _allowInput = false
-      return
-    }
-
-
-    var pressed = false
-
-    if (player && _allowInput) {
+      _allowInput = !viewIsBusy && (_world.strategy.currentActor is Player) && _world.strategy.currentActor.priority >= 12
       if (InputActions.nextTarget.justPressed) {
         _diageticUi.add(CombatTargetSelector.new(_zone, this))
         return
       }
+    }
 
-
-      var mouse = Mouse.pos
-      var mouseEntities = _zone.getEntitiesAtTile(screenToWorld(mouse))
-      if (mouseEntities.count > 0) {
-        _selectedEntityId = mouseEntities.toList[0].id
-      } else {
-        _selectedEntityId = null
-      }
-
+    if (player && _allowInput) {
       // Allow movement
       if (!player.action) {
         if (InputActions.rest.firing) {
@@ -134,78 +83,142 @@ class WorldScene is Scene {
         }
       }
     }
-    pressed = InputActions.directions.any {|key| key.down }
 
     _world.update()
-    var lastEntityLerp = null
-    for (event in _zone.events) {
-      if (event is MoveEvent) {
-        if (event.target is Player) {
-          _lastPosition = player.pos
-        }
-        if (isOnScreen(event.target.pos)) {
-          if (!lastEntityLerp) {
-            lastEntityLerp = EntityBulkLerp.new(this, [])
-            _diageticUi.add(lastEntityLerp)
-          }
-          lastEntityLerp.add(_entityViews[event.target.id])
-        } else {
-          _entityViews[event.target.id].pos.x = event.target.pos.x * TILE_SIZE
-          _entityViews[event.target.id].pos.y = event.target.pos.y * TILE_SIZE
-        }
-      } else {
-        lastEntityLerp = null
-        if (event is EntityAddedEvent) {
-          _diageticUi.add(EntityAdd.new(this, event.id))
-        } else if (event is EntityRemovedEvent) {
-          _diageticUi.add(EntityRemove.new(this, event.id))
-          System.print("Entity %(event.id) was removed")
-          if (event.id == player.id) {
-            _diageticUi.add(Pause.new(this, 60))
-          }
-        } else if (event is GameEndEvent) {
-          var result = event.won ? "won" : "lost"
-          System.print("The game has ended. You have %(result).")
-          if (event.won) {
-            _ui.add(SuccessMessage.new(this))
-          } else {
-            // TOOD: Add more context about cause of failure
-            _ui.add(FailureMessage.new(this))
-          }
-        } else if (event is ModifierEvent) {
-          if (isOnScreen(event.target.pos)) {
-            _diageticUi.add(Animation.new(this, event.target.pos * TILE_SIZE, event.positive ? Sprites["buff"] : Sprites["debuff"], 5))
-          }
 
-        } else if (event is PickupEvent) {
-        } else if (event is AttackEvent) {
-          var playerIsTarget = event.target is Player
-          if (isOnScreen(event.target.pos)) {
-            var animation = "%(event.attack.attackType)Attack"
-            var animate = event.target
-            var linger = 0
-            if (event.result == AttackResult.blocked) {
-              animation = "blocked"
-              linger = playerIsTarget ? 30 : linger
-            } else if (event.result == AttackResult.inert) {
-              animation = "inert"
-              animate = event.source
-              linger = playerIsTarget ? 30 : linger
-            }
-            _diageticUi.add(Animation.new(this, animate.pos * TILE_SIZE, Sprites[animation] || Sprites["basicAttack"], 5, linger))
-            if (playerIsTarget) {
-              // _diageticUi.add(Pause.new(this, 15))
-            }
-          }
-        } else if (event is LogEvent) {
-          _log.print(event.text)
-        } else if (event is CollisionEvent) {
-          if (isOnScreen(event.source.pos)) {
-          }
-        }
+    for (event in _zone.events) {
+      processEvent(event)
+    }
+  }
+
+  draw() {
+    super.draw()
+  }
+}
+
+class WorldRenderer is View {
+  construct new(parent, args) {
+    super(parent, args)
+    _log = Log.new()
+
+    _camera = Vec.new()
+    _ui = []
+    _diageticUi = []
+
+    _world = args[0]
+    var player = _world.active.getEntityByTag("player")
+
+    _camera.x = player.pos.x * TILE_SIZE
+    _camera.y = player.pos.y * TILE_SIZE
+    _lastPosition = player.pos
+    _entityLerpBatch = null
+    _selectedEntityId = null
+
+    _entityViews = {}
+    _world.active.entities.each {|entity| _entityViews[entity.id] = EntityView.new(_world.active, this, entity.id) }
+  }
+
+
+  world { _world }
+  camera { _camera }
+  camera=(v) { _camera = v }
+  update() {
+    if (Keyboard["l"].justPressed) {
+      _log.toggle()
+    }
+    _zone = _world.active
+    T = T + (1/60)
+    F = (T * 2).floor % 2
+    _entityLerpBatch = null
+
+    for (view in _entityViews.values) {
+      view.update()
+    }
+
+    var player = _zone.getEntityByTag("player")
+    if (player) {
+      _lastPosition = player.pos
+      var playerView = _entityViews[player.id]
+      _camera.x = playerView.pos.x
+      _camera.y = playerView.pos.y
+    }
+
+    if (updateAllUi()) {
+      return
+    }
+
+    if (player) {
+      var mouse = Mouse.pos
+      var mouseEntities = _zone.getEntitiesAtTile(screenToWorld(mouse))
+      if (mouseEntities.count > 0) {
+        _selectedEntityId = mouseEntities.toList[0].id
+      } else {
+        _selectedEntityId = null
       }
     }
   }
+
+  processEvent(event) {
+    var player = _world.active.getEntityByTag("player")
+    if (event is MoveEvent) {
+      if (event.target is Player) {
+        _lastPosition = player.pos
+      }
+      if (isOnScreen(event.target.pos)) {
+        if (!_entityLerpBatch) {
+          _entityLerpBatch = EntityBulkLerp.new(this, [])
+          _diageticUi.add(_entityLerpBatch)
+        }
+        _entityLerpBatch.add(_entityViews[event.target.id])
+      } else {
+        _entityViews[event.target.id].pos.x = event.target.pos.x * TILE_SIZE
+        _entityViews[event.target.id].pos.y = event.target.pos.y * TILE_SIZE
+      }
+    } else {
+      _entityLerpBatch = null
+      if (event is EntityAddedEvent) {
+        _diageticUi.add(EntityAdd.new(this, event.id))
+      } else if (event is EntityRemovedEvent) {
+        _diageticUi.add(EntityRemove.new(this, event.id))
+        System.print("Entity %(event.id) was removed")
+        if (event.id == player.id) {
+          _diageticUi.add(Pause.new(this, 60))
+        }
+      } else if (event is GameEndEvent) {
+        var result = event.won ? "won" : "lost"
+        System.print("The game has ended. You have %(result).")
+        if (event.won) {
+          _ui.add(SuccessMessage.new(this))
+        } else {
+          _ui.add(FailureMessage.new(this))
+        }
+      } else if (event is ModifierEvent) {
+        if (isOnScreen(event.target.pos)) {
+          _diageticUi.add(Animation.new(this, event.target.pos * TILE_SIZE, event.positive ? Sprites["buff"] : Sprites["debuff"], 5))
+        }
+      } else if (event is AttackEvent) {
+        var playerIsTarget = event.target is Player
+        if (isOnScreen(event.target.pos)) {
+          var animation = "%(event.attack.attackType)Attack"
+          var animate = event.target
+          var linger = 0
+          if (event.result == AttackResult.blocked) {
+            animation = "blocked"
+            linger = playerIsTarget ? 30 : linger
+          } else if (event.result == AttackResult.inert) {
+            animation = "inert"
+            animate = event.source
+            linger = playerIsTarget ? 30 : linger
+          }
+          _diageticUi.add(Animation.new(this, animate.pos * TILE_SIZE, Sprites[animation] || Sprites["basicAttack"], 5, linger))
+        }
+      } else if (event is LogEvent) {
+        _log.print(event.text)
+      }
+    }
+  }
+
+  busy { !(_diageticUi.isEmpty && _ui.isEmpty) }
 
   updateAllUi() {
     var uiList
