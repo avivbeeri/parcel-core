@@ -25,7 +25,7 @@ import "./system/log" for Log
 
 import "./widgets" for Button
 import "./scene/autotile" for AutoTile
-import "./scene/renderer-graphical" for GraphicalRenderer, EntityView
+import "./scene/renderer-graphical" for EntityView
 
 // Timer variables
 var T = 0
@@ -37,6 +37,9 @@ var SCALE = 1
 var TILE_SIZE = 16 * SCALE
 var X_OFFSET = 0
 
+class BeginTargetSelectionEvent {
+  construct new() {}
+}
 
 class WorldScene is Scene {
   construct new(args) {
@@ -55,13 +58,13 @@ class WorldScene is Scene {
     var player = _zone.getEntityByTag("player")
     if (player) {
       _allowInput = !viewIsBusy && (_world.strategy.currentActor is Player) && _world.strategy.currentActor.priority >= 12
-      if (InputActions.nextTarget.justPressed) {
-        _diageticUi.add(CombatTargetSelector.new(_zone, this))
-        return
-      }
     }
 
     if (player && _allowInput) {
+      if (InputActions.nextTarget.justPressed) {
+        processEvent(BeginTargetSelectionEvent.new())
+        return
+      }
       // Allow movement
       if (!player.action) {
         if (InputActions.rest.firing) {
@@ -160,7 +163,9 @@ class WorldRenderer is View {
 
   processEvent(event) {
     var player = _world.active.getEntityByTag("player")
-    if (event is MoveEvent) {
+    if (event is BeginTargetSelectionEvent) {
+      _diageticUi.add(CombatTargetSelector.new(_zone, this))
+    } else if (event is MoveEvent) {
       if (event.target is Player) {
         _lastPosition = player.pos
       }
