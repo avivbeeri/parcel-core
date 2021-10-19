@@ -149,7 +149,7 @@ class SuccessMessage is Ui {
 
   update() {
     if (InputActions.confirm.justPressed) {
-      ctx.game.push(WorldScene, [ WorldGenerator.generate() ])
+      ctx.parent.game.push(WorldScene, [ WorldGenerator.generate() ])
     }
   }
 
@@ -169,7 +169,7 @@ class FailureMessage is Ui {
   finished { false }
   update() {
     if (InputActions.confirm.justPressed) {
-      ctx.game.push(WorldScene, [ WorldGenerator.generate() ])
+      ctx.parent.game.push(WorldScene, [ WorldGenerator.generate() ])
     }
   }
 

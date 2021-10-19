@@ -56,9 +56,7 @@ class WorldScene is Scene {
     super.update()
 
     var player = _zone.getEntityByTag("player")
-    if (player) {
-      _allowInput = !viewIsBusy && (_world.strategy.currentActor is Player) && _world.strategy.currentActor.priority >= 12
-    }
+    _allowInput = !viewIsBusy && (_world.strategy.currentActor is Player) && _world.strategy.currentActor.priority >= 12
 
     if (player && _allowInput) {
       if (InputActions.nextTarget.justPressed) {
@@ -110,6 +108,7 @@ class WorldRenderer is View {
 
     _world = args[0]
     var player = _world.active.getEntityByTag("player")
+    _playerId = player.id
 
     _camera.x = player.pos.x * TILE_SIZE
     _camera.y = player.pos.y * TILE_SIZE
@@ -186,7 +185,7 @@ class WorldRenderer is View {
       } else if (event is EntityRemovedEvent) {
         _diageticUi.add(EntityRemove.new(this, event.id))
         System.print("Entity %(event.id) was removed")
-        if (event.id == player.id) {
+        if (event.id == _playerId) {
           _diageticUi.add(Pause.new(this, 60))
         }
       } else if (event is GameEndEvent) {
