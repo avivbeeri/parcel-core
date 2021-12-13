@@ -12,6 +12,7 @@ class Entity is DataObject {
 
     // Lower is better
     _priority = 0
+    _alive = true
   }
 
   id { _id }
@@ -31,6 +32,9 @@ class Entity is DataObject {
 
   priority=(v) { _priority = v }
   priority { _priority }
+
+  alive=(v) { _alive = v }
+  alive { _alive }
 
   // May not always be used, can be override
   speed { 1 }
@@ -61,3 +65,45 @@ class Entity is DataObject {
   toString { "%(name) (id: %(_id))" }
 }
 
+class StackEntity is Entity {
+  construct new(config) {
+    super(config)
+    _behaviours = []
+  }
+
+  push(behaviour) {
+    _behaviours.add(behaviour)
+  }
+
+  update() {
+    var action
+    for (behaviour in _behaviours) {
+      action = behaviour.evaluate()
+      if (action) {
+        break
+      }
+    }
+    return action || Action.none
+  }
+}
+
+class EntityFactory {
+  static map {
+    if (!__map) {
+      __map = {}
+    }
+    return __map
+  }
+
+  static register(name, entityClass) {
+    map[name] = entityClass
+  }
+
+  static prepare(config) {
+    var classType = config["classType"]
+    if (map.contains(classType)) {
+      Fiber.abort("Unknown entity type %(classType)")
+    }
+    return map[classType].new(config)
+  }
+}

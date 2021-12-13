@@ -1,33 +1,32 @@
-import "math" for Vec
+import "./core/display" for Display
+import "./core/config" for Config
 
-import "./core/main" for ParcelMain
-import "./core/world" for World, Zone
-import "./core/map" for TileMap, Tile
-import "./core/director" for
-  RealTimeStrategy,
-  TurnBasedStrategy,
-  EnergyStrategy
+class ParcelMain {
+  construct new(scene) {
+    _initial = scene
+    _args = []
+  }
+  construct new(scene, args) {
+    _initial = scene
+    _args = args
+  }
 
+  init() {
+    Display.setup(Config["display"])
+    push(_initial, _args)
+  }
 
-import "./player" for PlayerData
-import "./entities" for Player, Dummy
-import "./scene" for WorldScene
+  update() {
+    _scene.update()
+  }
+  draw(dt) {
+    _scene.draw()
+  }
 
-// World generation code
-var world = World.new(EnergyStrategy.new())
+  push(scene) { push(scene, []) }
+  push(scene, args) {
+    _scene = scene.new(args)
+    _scene.game = this
+  }
+}
 
-var zone = world.pushZone(Zone.new(TileMap.init()))
-zone.map[0, 0] = Tile.new({ "floor": "grass" })
-zone.map[0, 1] = Tile.new({ "floor": "solid", "solid": true })
-zone.map[10, 0] = Tile.new({ "floor": "solid", "solid": true })
-
-var player = zone.addEntity("player", Player.new())
-player["data"] = PlayerData.new()
-
-var dummy = zone.addEntity(Dummy.new())
-dummy.pos = Vec.new(-1, 0)
-
-dummy = zone.addEntity(Dummy.new())
-dummy.pos = Vec.new(-1, 4)
-
-var Game = ParcelMain.new(WorldScene, [ world ])

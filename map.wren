@@ -1,5 +1,32 @@
+import "math" for Vec
+
 import "core/dataobject" for DataObject
 import "core/elegant" for Elegant
+
+class Room is Vec {
+  construct new(x, y, w, h) {
+    super(x, y, w, h)
+    _neighbours = []
+    _doors = []
+  }
+
+  kind { _kind }
+  kind=(v) { _kind = v }
+
+  neighbours { _neighbours }
+  doors { _doors }
+  toString { "Room [%(super.toString)]"}
+
+  width { z }
+  height { w }
+
+  contains(pos) {
+    return (pos.x > this.x &&
+          pos.x < this.x + this.width &&
+          pos.y > this.y &&
+          pos.y < this.y + this.height)
+  }
+}
 
 class Tile is DataObject {
   static new() {

@@ -23,6 +23,16 @@ class Director {
 
   runPostUpdate() {
     world.postUpdate.each {|hook| hook.update(world) }
+    cleanupEntities()
+  }
+
+  cleanupEntities() {
+    world.entities
+    .where {|entity| !entity.alive }
+    .each {|entity|
+      System.print("removing %(entity)")
+      world.removeEntity(entity)
+    }
   }
 
   processEntities() {}

@@ -26,6 +26,7 @@ class World is DataObject {
   strategy { _strategy }
 
   update() {
+    _ghosts = []
     _strategy.bind(active).update()
   }
 }
@@ -44,6 +45,7 @@ class Zone is DataObject {
 
   init() {
     _entities = []
+    _ghosts = []
     _events = []
     _tagged = {}
     _postUpdate = []
@@ -95,12 +97,20 @@ class Zone is DataObject {
     _freeIds.add(entity.id)
     parent.strategy.onEntityRemove(pos)
     entities.removeAt(pos)
+    _ghosts.add(entity)
+    entity.alive = false
     _events.add(EntityRemovedEvent.new(entity.id))
   }
 
-  getEntityByTag(tag) { getEntityById(_tagged[tag]) }
-  getEntityById(id) {
+  getEntityByTag(tag) { getEntityById(_tagged[tag], false) }
+  getEntityById(id) { getEntityById(id, true) }
+  getEntityById(id, includeGhosts) {
     var ent = _entities.where {|entity| entity.id == id }
+    if (ent.count == 0 && includeGhosts) {
+      ent = _ghosts.where {|entity| entity.id == id }
+      return ent.toList.removeAt(0)
+    }
+
     if (ent.count == 1) {
       return ent.toList.removeAt(0)
     } else if (ent.count > 1) {
