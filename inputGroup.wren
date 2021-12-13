@@ -1,5 +1,5 @@
 /*
-  InputGroup Library v0.3
+  InputGroup Library v0.4
   Allows for grouping DigitalInput together into a single action,
   with allowances for repetition.
 */
