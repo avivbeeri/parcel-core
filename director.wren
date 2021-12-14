@@ -52,6 +52,7 @@ class ActionStrategy is Director {
     }.toList
     actions.where {|action| action != null }.each {|action|
       var result
+      var source = action.source
       while (true) {
         result = action.perform()
         action = result.alternate
@@ -59,7 +60,7 @@ class ActionStrategy is Director {
           break
         }
       }
-      action.source.endTurn()
+      source.endTurn()
     }
   }
   onEntityAdd(entity) {
