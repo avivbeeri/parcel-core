@@ -83,7 +83,7 @@ class BFS {
     frontier.enqueue(start)
     var cameFrom = {}
     if (start is Vector) {
-      start = Elegant.pair(start)
+      start = Elegant.pair(VecFloor.do(start))
     }
     cameFrom[start] = null
 
@@ -103,6 +103,13 @@ class BFS {
   }
 }
 
+class VecFloor {
+  static do(vec) {
+    return Vector.new(vec.x.round, vec.y.round)
+  }
+}
+
+
 class DijkstraSearch {
 
   static search(graph, start) {
@@ -110,7 +117,7 @@ class DijkstraSearch {
   }
   static search(graph, start, goal) {
     if (start is Vector) {
-      start = Elegant.pair(start)
+      start = Elegant.pair(VecFloor.do(start))
     }
     var frontier = PriorityQueue.new()
     frontier.put(start, 0)
@@ -138,10 +145,10 @@ class DijkstraSearch {
 
   static reconstruct(cameFrom, start, goal) {
     if (start is Vector) {
-      start = Elegant.pair(start)
+      start = Elegant.pair(VecFloor.do(start))
     }
     if (goal is Vector) {
-      goal = Elegant.pair(goal)
+      goal = Elegant.pair(VecFloor.do(goal))
     }
     var current = goal
     var path = []
@@ -173,7 +180,7 @@ class AStar {
 
   static search(graph, start, goal) {
     if (start is Vector) {
-      start = Elegant.pair(start)
+      start = Elegant.pair(VecFloor.do(start))
     }
     var frontier = PriorityQueue.new()
     frontier.put(start, 0)
@@ -201,10 +208,10 @@ class AStar {
 
   static reconstruct(cameFrom, start, goal) {
     if (start is Vector) {
-      start = Elegant.pair(start)
+      start = Elegant.pair(VecFloor.do(start))
     }
     if (goal is Vector) {
-      goal = Elegant.pair(goal)
+      goal = Elegant.pair(VecFloor.do(goal))
     }
     var current = goal
     var path = []
@@ -223,7 +230,7 @@ class AStar {
 class DijkstraMap {
   static search(graph, start) {
     if (start is Vector) {
-      start = Elegant.pair(start)
+      start = Elegant.pair(VecFloor.do(start))
     }
     var frontier = PriorityQueue.new()
     frontier.put(start, 0)
@@ -248,10 +255,10 @@ class DijkstraMap {
 
   static reconstruct(cameFrom, start, goal) {
     if (start is Vector) {
-      start = Elegant.pair(start)
+      start = Elegant.pair(VecFloor.do(start))
     }
     if (goal is Vector) {
-      goal = Elegant.pair(goal)
+      goal = Elegant.pair(VecFloor.do(goal))
     }
     var current = goal
     var path = []
