@@ -69,11 +69,11 @@ class TileMap {
   }
 
   [vec]=(tile) {
-    this[vec.x, vec.y] = tile
+    this[vec.x.floor, vec.y.floor] = tile
   }
 
   [x, y] {
-    var pair = Elegant.pair(x, y)
+    var pair = Elegant.pair(x.floor, y.floor)
     if (!_tiles[pair]) {
       return Tile.new(_default)
     }
@@ -81,7 +81,7 @@ class TileMap {
   }
 
   [x, y]=(tile) {
-    var pair = Elegant.pair(x, y)
+    var pair = Elegant.pair(x.floor, y.floor)
     _tiles[pair] = tile
   }
 }

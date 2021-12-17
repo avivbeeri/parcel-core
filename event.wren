@@ -13,6 +13,7 @@ class Event {
   }
   cancelled { _cancelled }
 }
+
 class EntityChangeEvent is Event {
   construct new(id) {
     super()
