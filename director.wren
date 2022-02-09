@@ -59,6 +59,7 @@ class ActionStrategy is Director {
         if (action == null) {
           break
         }
+        action.bind(source)
       }
       source.endTurn()
     }
