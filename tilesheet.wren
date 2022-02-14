@@ -27,10 +27,12 @@ class Tilesheet {
 
   draw(s, x, y) { draw(s, x, y, null, null) }
   draw(s, x, y, fg, bg) { getTile(s, fg, bg).draw(x, y) }
+  draw(s, x, y, fg, bg, cache) { getTile(s, fg, bg, cache).draw(x, y) }
 
   getTile(s) { getTile(s, null, null) }
-  getTile(s, fg, bg) {
-    if (!_cache[s]) {
+  getTile(s, fg, bg) { getTile(s, fg, bg, true) }
+  getTile(s, fg, bg, useCache) {
+    if (!_cache[s] || !useCache) {
       var sy = (s / _width).floor * _tSize
       var sx = (s % _width).floor * _tSize
 

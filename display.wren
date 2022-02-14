@@ -84,6 +84,9 @@ class Display {
   }
 
   static printCentered(text, y, color, font) {
+    if (font == Font.default) {
+      return printCentered(text, y, color)
+    }
     return Display.print(text, {
       "color": color,
       "font": font,
@@ -92,6 +95,10 @@ class Display {
       "size": Vec.new(Canvas.width, Canvas.height),
       "overflow": true
     })
+  }
+  static printCentered(text, y, color) {
+    var x = (Canvas.width - (text.count * 8)) / 2
+    Canvas.print(text, x, y, color)
   }
 
   static init_() {

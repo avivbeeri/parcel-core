@@ -84,5 +84,7 @@ class TileMap {
     var pair = Elegant.pair(x.floor, y.floor)
     _tiles[pair] = tile
   }
+
+  tiles { _tiles }
 }
 
