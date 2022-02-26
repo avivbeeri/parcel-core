@@ -97,8 +97,12 @@ class Display {
     })
   }
   static printCentered(text, y, color) {
-    var x = (Canvas.width - (text.count * 8)) / 2
-    Canvas.print(text, x, y, color)
+    if (Canvas.font == Font.default) {
+      var x = (Canvas.width - (text.count * 8)) / 2
+      Canvas.print(text, x, y, color)
+    } else {
+      printCentered(text, y, color, Canvas.font)
+    }
   }
 
   static init_() {
