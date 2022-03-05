@@ -13,11 +13,16 @@ class GameElement {
 class View is GameElement {
   construct new () {
     _children = []
+    _z = 0
   }
   construct new (parent) {
     _parent = parent
     _children = []
+    _z = 0
   }
+
+  z { _z }
+  z=(v) { _z = v }
 
   addViewChild(child) {
     if (!(child is View)) {
@@ -25,6 +30,7 @@ class View is GameElement {
     }
     _children.add(child)
     child.parent = this
+    _children.sort {|a, b| a.z < b.z }
   }
   removeViewChild(child) {
     _children.remove(child)
