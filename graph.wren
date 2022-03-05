@@ -3,7 +3,6 @@ import "./core/elegant" for Elegant
 import "./core/adt" for Queue, Heap
 import "./core/dir" for Directions
 
-
 class Location {}
 
 class Graph {
@@ -59,20 +58,25 @@ class WeightedZone is SquareGrid {
   }
 }
 
+
 // Expects tuple [ priority, item ]
-class PriorityQueue is Heap {
+class PriorityQueue {
+
   construct new() {
-    var comparator = Fn.new {|a, b| b[0] < a[0] }
-    super(comparator)
+    _comparator = Fn.new {|a, b| b[0] > a[0] }
+    _list = []
   }
+  isEmpty { _list.isEmpty }
 
   get() {
-    return del()[1]
+    return _list.removeAt(0)[1]
   }
 
   put(item, priority) {
-    return insert([priority, item])
+    _list.add([priority, item])
+    _list.sort(_comparator)
   }
+
 }
 
 
@@ -80,11 +84,11 @@ class BFS {
   static search(graph, start) { search(graph, start, null) }
   static search(graph, start, goal) {
     var frontier = Queue.new()
-    frontier.enqueue(start)
     var cameFrom = {}
     if (start is Vector) {
       start = Elegant.pair(VecFloor.do(start))
     }
+    frontier.enqueue(start)
     cameFrom[start] = null
 
     while (!frontier.isEmpty) {
@@ -99,7 +103,27 @@ class BFS {
         }
       }
     }
-    return cameFrom
+    return [ cameFrom ]
+  }
+  static reconstruct(cameFrom, start, goal) {
+    if (start is Vector) {
+      start = Elegant.pair(VecFloor.do(start))
+    }
+    if (goal is Vector) {
+      goal = Elegant.pair(VecFloor.do(goal))
+    }
+    var current = goal
+    var path = []
+    while (current != start) {
+      path.insert(0, Elegant.unpair(current))
+      current = cameFrom[current]
+      if (current == null) {
+        // Path is unreachable
+        return null
+      }
+    }
+    path.insert(0, Elegant.unpair(start))
+    return path
   }
 }
 
@@ -133,10 +157,15 @@ class DijkstraSearch {
       }
       for (next in graph.neighbours(current)) {
         var newCost = costSoFar[current] + graph.cost(current, next)
-        if (!costSoFar[next] || newCost < costSoFar[next]) {
+        if (costSoFar[next] == null) {
           costSoFar[next] = newCost
           frontier.put(next, newCost)
           cameFrom[next] = current
+        }
+        if (newCost < costSoFar[next]) {
+          costSoFar[next] = newCost
+          cameFrom[next] = current
+          frontier.put(next, newCost)
         }
       }
     }
