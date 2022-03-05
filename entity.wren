@@ -84,6 +84,9 @@ class StackEntity is Entity {
   }
 
   push(behaviour) {
+    if (behaviour is Class) {
+      behaviour = behaviour.new(this)
+    }
     _behaviours.add(behaviour)
   }
 
