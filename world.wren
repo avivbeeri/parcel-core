@@ -102,6 +102,7 @@ class Zone is DataObject {
     _events.add(EntityRemovedEvent.new(entity.id))
   }
 
+  getEntityByTag(tag, includeGhost) { getEntityById(_tagged[tag], includeGhost) }
   getEntityByTag(tag) { getEntityById(_tagged[tag], false) }
   getEntityById(id) { getEntityById(id, true) }
   getEntityById(id, includeGhosts) {
