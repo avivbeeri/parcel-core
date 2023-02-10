@@ -2,6 +2,12 @@ import "graphics" for ImageData, Color, Canvas, Font
 import "dome" for Window
 import "math" for Vec
 
+class DefaultFont {
+  static getArea(text) {
+    return Vec.new(text.count * 8, 8)
+  }
+}
+
 class Display {
   static setup() {
     Canvas.resize(240, 160)
@@ -27,6 +33,7 @@ class Display {
     // TODO vertical size?
     var size = settings["size"] || Vec.new(Canvas.width, Canvas.height)
     var font = settings["font"] || Font.default
+    var fontObj = Font[settings["font"]] || DefaultFont
     var overflow = settings["overflow"] || false
 
     var lines = []
@@ -38,14 +45,14 @@ class Display {
 
     while (true) {
       currentLine = words.join(" ")
-      var area = Font[font].getArea(currentLine)
+      var area = fontObj.getArea(currentLine)
       nextLine = []
       while (area.x > maxWidth && words.count > 1) {
         // remove the last word, add it to the start of the nextLine
         nextLine.insert(0, words.removeAt(-1))
         currentLine = words.join(" ")
         // compute the current line's area now
-        area = Font[font].getArea(currentLine)
+        area = fontObj.getArea(currentLine)
         // and recheck
       }
 

@@ -9,10 +9,11 @@ class Entity is DataObject {
   }
   construct new(config) {
     super(config)
-    init()
+    init(config)
   }
 
-  init() {
+  init() { init({}) }
+  init(config) {
     _pos = Vec.new()
     _size = Vec.new(1, 1)
     _vel = Vec.new()
@@ -70,17 +71,17 @@ class Entity is DataObject {
   update() { Action.none }
   draw() {}
 
-  toString { "%(name) (id: %(_id))" }
+  toString { _name ? _name : "%(name) (id: %(_id))" }
 }
 
 class StackEntity is Entity {
   construct new() {
-    super()
     _behaviours = []
+    super()
   }
   construct new(config) {
-    super(config)
     _behaviours = []
+    super(config)
   }
 
   push(behaviour) {

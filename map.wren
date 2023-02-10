@@ -8,8 +8,11 @@ class Room is Vec {
     super(x, y, w, h)
     _neighbours = []
     _doors = []
+    _id = __id || 0
+    __id = _id + 1
   }
 
+  id { _id }
   kind { _kind }
   kind=(v) { _kind = v }
 

@@ -76,6 +76,17 @@ class EnergyStrategy is Director {
   construct new() {
     super()
     _turn = 0
+    _fn = Fn.new {
+      var advance = true
+      while (true) {
+        advance = gameLoop()
+        if (world.parent.gameover) {
+          break
+        }
+        Fiber.yield()
+      }
+    }
+    _fiber = null
   }
   turn { _turn }
   advance() {
@@ -88,7 +99,7 @@ class EnergyStrategy is Director {
 
   gainEnergy(actor) {
     actor.priority = actor.priority + (actor.speed || 1)
-    actor.priority = M.min(actor.priority, threshold)
+    // actor.priority = M.min(actor.priority, threshold)
   }
 
   threshold { 12 }
@@ -122,7 +133,7 @@ class EnergyStrategy is Director {
       }
       action = result.alternate
     }
-    actor.priority = 0
+    actor.priority = actor.priority % threshold
     actor.endTurn()
     runPostUpdate()
     advance()
@@ -130,10 +141,10 @@ class EnergyStrategy is Director {
   }
 
   processEntities() {
-    var advance = true
-    while (advance && !world.parent.gameover) {
-      advance = gameLoop()
+    if (!_fiber || _fiber.isDone) {
+      _fiber = Fiber.new(_fn)
     }
+    _fiber.call()
   }
 
   onEntityRemove(pos) {
