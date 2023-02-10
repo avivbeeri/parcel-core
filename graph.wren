@@ -1,7 +1,7 @@
 import "math" for Vector
 import "./core/elegant" for Elegant
 import "./core/adt" for Queue, Heap
-import "./core/dir" for Directions
+import "./core/dir" for Directions, NSEW
 
 class Location {}
 
@@ -31,7 +31,7 @@ class SquareGrid is Graph {
       location = Elegant.unpair(location)
     }
     var result = []
-    for (dir in Directions.values) {
+    for (dir in NSEW.values) {
       if (dir.x != 0 && dir.y != 0) {
         continue
       }
@@ -43,6 +43,8 @@ class SquareGrid is Graph {
     }
     return result
   }
+
+  cost(a, b) { 1 }
 }
 
 class WeightedZone is SquareGrid {
@@ -256,6 +258,7 @@ class AStar {
     return path
   }
 }
+
 class DijkstraMap {
   static search(graph, start) {
     if (start is Vector) {
@@ -313,5 +316,42 @@ class DijkstraMap {
       v2 = Elegant.unpair(b)
     }
     return (v1 - v2).manhattan
+  }
+}
+class BFSNeutral {
+  static search(graph, start) { search(graph, start, null) }
+  static search(graph, start, goal) {
+    var frontier = Queue.new()
+    var cameFrom = {}
+    frontier.enqueue(start)
+    cameFrom[start] = null
+
+    while (!frontier.isEmpty) {
+      var current = frontier.dequeue()
+      if (goal && current == goal) {
+        break
+      }
+      for (next in graph.neighbours(current)) {
+        if (!cameFrom[next]) {
+          frontier.enqueue(next)
+          cameFrom[next] = current
+        }
+      }
+    }
+    return [ cameFrom ]
+  }
+  static reconstruct(cameFrom, start, goal) {
+    var current = goal
+    var path = []
+    while (current != start) {
+      path.insert(0, current)
+      current = cameFrom[current]
+      if (current == null) {
+        // Path is unreachable
+        return null
+      }
+    }
+    path.insert(0, start)
+    return path
   }
 }
