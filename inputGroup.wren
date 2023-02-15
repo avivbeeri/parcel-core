@@ -5,7 +5,6 @@
 */
 
 import "input" for DigitalInput
-import "math" for M
 
 class InputGroup {
   construct new(inputs) { init(inputs, null) }
@@ -56,12 +55,11 @@ class InputGroup {
             return false
           } else if (input.repeats == _initialFreq) {
             return true
-          } else if (M.max(0, (input.repeats - _initialFreq)) % _freq == 0) {
+          } else if (0.max(input.repeats - _initialFreq) % _freq == 0) {
             return true
           }
         }
         return false
-        // return input.down && (input.repeats == _initialFreq || (input.repeats - _initialFreq) % _freq == 0)
       } else {
         return input.justPressed
       }
