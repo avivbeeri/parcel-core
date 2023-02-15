@@ -1,3 +1,4 @@
+import "math" for M
 class State {
   onEnter() {}
   update() { this }
@@ -13,17 +14,24 @@ class GameElement {
 class View is GameElement {
   construct new () {
     _children = []
+    _newChildren = []
+    _z = 0
   }
   construct new (parent) {
     _parent = parent
     _children = []
+    _newChildren = []
+    _z = 0
   }
+
+  z { _z }
+  z=(v) { _z = v }
 
   addViewChild(child) {
     if (!(child is View)) {
       Fiber.abort("Attempted to add non-View object to the scene: %(child)")
     }
-    _children.add(child)
+    _newChildren.add(child)
     child.parent = this
   }
   removeViewChild(child) {
@@ -48,9 +56,30 @@ class View is GameElement {
 
   update() {
     _children.each {|view| view.update() }
+    _children.addAll(_newChildren)
+    _newChildren.clear()
+    _children.sort {|a, b|
+      if (a.z == b.z) {
+        var a = a.type.name.codePoints
+        var b = b.type.name.codePoints
+        var count = M.min(a.count, b.count)
+        for (i in 0...count) {
+          if (a[i] != b[i]) {
+            return a[i] < b[i]
+          }
+        }
+        return a.count > b.count
+      }
+      return a.z < b.z
+    }
   }
   draw() {
-    _children.each {|view| view.draw() }
+    var copy = [].addAll(_children)
+    copy.each {|view|
+      if (_children.contains(view)) {
+        view.draw()
+      }
+    }
   }
   busy { _children.count > 0 && _children.any {|view| view.busy } }
 }

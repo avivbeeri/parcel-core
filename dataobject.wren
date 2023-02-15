@@ -1,3 +1,4 @@
+import "json" for JSON
 class DataObject {
   construct new() {
     _data = {}
@@ -7,6 +8,20 @@ class DataObject {
     for (key in data.keys) {
       _data[key] = data[key]
     }
+  }
+
+  static copyValue(value) {
+    if (value is Map) {
+      var copy = {}
+      for (key in value.keys) {
+        copy[key] = copyValue(value[key])
+      }
+      return copy
+    }
+    if (value is List) {
+      return value.map {|entry| copyValue(entry) }.toList
+    }
+    return value
   }
 
   data { _data }
@@ -40,12 +55,9 @@ class Store {
     _listeners.each {|listener| listener.call() }
   }
 
+
   copy_(state) {
-    var copy = {}
-    for (key in state.keys) {
-      copy[key] = state[key]
-    }
-    return copy
+    return DataObject.copyValue(state)
   }
 
   state { _state }

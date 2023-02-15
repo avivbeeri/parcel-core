@@ -5,6 +5,15 @@ import "./core/action" for Action
 class Entity is DataObject {
   construct new() {
     super()
+    init()
+  }
+  construct new(config) {
+    super(config)
+    init(config)
+  }
+
+  init() { init({}) }
+  init(config) {
     _pos = Vec.new()
     _size = Vec.new(1, 1)
     _vel = Vec.new()
@@ -62,16 +71,23 @@ class Entity is DataObject {
   update() { Action.none }
   draw() {}
 
-  toString { "%(name) (id: %(_id))" }
+  toString { _name ? _name : "%(name) (id: %(_id))" }
 }
 
 class StackEntity is Entity {
-  construct new(config) {
-    super(config)
+  construct new() {
     _behaviours = []
+    super()
+  }
+  construct new(config) {
+    _behaviours = []
+    super(config)
   }
 
   push(behaviour) {
+    if (behaviour is Class) {
+      behaviour = behaviour.new(this)
+    }
     _behaviours.add(behaviour)
   }
 

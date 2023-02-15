@@ -1,8 +1,7 @@
 import "math" for Vector
 import "./core/elegant" for Elegant
 import "./core/adt" for Queue, Heap
-import "./core/dir" for Directions
-
+import "./core/dir" for Directions, NSEW
 
 class Location {}
 
@@ -32,7 +31,7 @@ class SquareGrid is Graph {
       location = Elegant.unpair(location)
     }
     var result = []
-    for (dir in Directions.values) {
+    for (dir in NSEW.values) {
       if (dir.x != 0 && dir.y != 0) {
         continue
       }
@@ -44,6 +43,8 @@ class SquareGrid is Graph {
     }
     return result
   }
+
+  cost(a, b) { 1 }
 }
 
 class WeightedZone is SquareGrid {
@@ -59,20 +60,25 @@ class WeightedZone is SquareGrid {
   }
 }
 
+
 // Expects tuple [ priority, item ]
-class PriorityQueue is Heap {
+class PriorityQueue {
+
   construct new() {
-    var comparator = Fn.new {|a, b| b[0] < a[0] }
-    super(comparator)
+    _comparator = Fn.new {|a, b| b[0] > a[0] }
+    _list = []
   }
+  isEmpty { _list.isEmpty }
 
   get() {
-    return del()[1]
+    return _list.removeAt(0)[1]
   }
 
   put(item, priority) {
-    return insert([priority, item])
+    _list.add([priority, item])
+    _list.sort(_comparator)
   }
+
 }
 
 
@@ -80,11 +86,11 @@ class BFS {
   static search(graph, start) { search(graph, start, null) }
   static search(graph, start, goal) {
     var frontier = Queue.new()
-    frontier.enqueue(start)
     var cameFrom = {}
     if (start is Vector) {
       start = Elegant.pair(VecFloor.do(start))
     }
+    frontier.enqueue(start)
     cameFrom[start] = null
 
     while (!frontier.isEmpty) {
@@ -99,7 +105,27 @@ class BFS {
         }
       }
     }
-    return cameFrom
+    return [ cameFrom ]
+  }
+  static reconstruct(cameFrom, start, goal) {
+    if (start is Vector) {
+      start = Elegant.pair(VecFloor.do(start))
+    }
+    if (goal is Vector) {
+      goal = Elegant.pair(VecFloor.do(goal))
+    }
+    var current = goal
+    var path = []
+    while (current != start) {
+      path.insert(0, Elegant.unpair(current))
+      current = cameFrom[current]
+      if (current == null) {
+        // Path is unreachable
+        return null
+      }
+    }
+    path.insert(0, Elegant.unpair(start))
+    return path
   }
 }
 
@@ -133,10 +159,15 @@ class DijkstraSearch {
       }
       for (next in graph.neighbours(current)) {
         var newCost = costSoFar[current] + graph.cost(current, next)
-        if (!costSoFar[next] || newCost < costSoFar[next]) {
+        if (costSoFar[next] == null) {
           costSoFar[next] = newCost
           frontier.put(next, newCost)
           cameFrom[next] = current
+        }
+        if (newCost < costSoFar[next]) {
+          costSoFar[next] = newCost
+          cameFrom[next] = current
+          frontier.put(next, newCost)
         }
       }
     }
@@ -227,6 +258,7 @@ class AStar {
     return path
   }
 }
+
 class DijkstraMap {
   static search(graph, start) {
     if (start is Vector) {
@@ -284,5 +316,42 @@ class DijkstraMap {
       v2 = Elegant.unpair(b)
     }
     return (v1 - v2).manhattan
+  }
+}
+class BFSNeutral {
+  static search(graph, start) { search(graph, start, null) }
+  static search(graph, start, goal) {
+    var frontier = Queue.new()
+    var cameFrom = {}
+    frontier.enqueue(start)
+    cameFrom[start] = null
+
+    while (!frontier.isEmpty) {
+      var current = frontier.dequeue()
+      if (goal && current == goal) {
+        break
+      }
+      for (next in graph.neighbours(current)) {
+        if (!cameFrom[next]) {
+          frontier.enqueue(next)
+          cameFrom[next] = current
+        }
+      }
+    }
+    return [ cameFrom ]
+  }
+  static reconstruct(cameFrom, start, goal) {
+    var current = goal
+    var path = []
+    while (current != start) {
+      path.insert(0, current)
+      current = cameFrom[current]
+      if (current == null) {
+        // Path is unreachable
+        return null
+      }
+    }
+    path.insert(0, start)
+    return path
   }
 }
