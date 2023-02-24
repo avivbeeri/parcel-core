@@ -1,4 +1,3 @@
-import "math" for M
 class State {
   onEnter() {}
   update() { this }
@@ -62,7 +61,7 @@ class View is GameElement {
       if (a.z == b.z) {
         var a = a.type.name.codePoints
         var b = b.type.name.codePoints
-        var count = M.min(a.count, b.count)
+        var count = a.count.min(b.count)
         for (i in 0...count) {
           if (a[i] != b[i]) {
             return a[i] < b[i]

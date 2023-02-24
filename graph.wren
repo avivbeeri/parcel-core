@@ -1,6 +1,6 @@
 import "math" for Vector
 import "./core/elegant" for Elegant
-import "./core/adt" for Queue, Heap
+import "./core/adt" for Queue, PriorityQueue
 import "./core/dir" for Directions, NSEW
 
 class Location {}
@@ -61,25 +61,6 @@ class WeightedZone is SquareGrid {
 }
 
 
-// Expects tuple [ priority, item ]
-class PriorityQueue {
-
-  construct new() {
-    _comparator = Fn.new {|a, b| b[0] > a[0] }
-    _list = []
-  }
-  isEmpty { _list.isEmpty }
-
-  get() {
-    return _list.removeAt(0)[1]
-  }
-
-  put(item, priority) {
-    _list.add([priority, item])
-    _list.sort(_comparator)
-  }
-
-}
 
 
 class BFS {

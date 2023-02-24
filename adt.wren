@@ -1,4 +1,10 @@
-// This implements the interface for some common data types
+// This implements some common data types
+var HashableTypes = [ Number, String, Range, Bool, Class ]
+var DEFAULT_MAX_COMPARATOR = Fn.new {|a, b| a[0] > b[0] }
+var DEFAULT_MIN_COMPARATOR = Fn.new {|a, b| a[0] < b[0] }
+class Hashable {
+  hash { this.toString }
+}
 
 class Stack {
   construct new() {
@@ -15,8 +21,68 @@ class Stack {
   pop() {
     return _list.removeAt(-1)
   }
+
+  iterate(iter) { _list.iterate(iter) }
+  iteratorValue(iter) { _list.iteratorValue(iter) }
 }
 
+class Set {
+  construct new() {
+    _map = {}
+  }
+
+  isEmpty { _map.isEmpty }
+  count { _map.count }
+
+  has(value) {
+    var hash = value
+    if (value is Hashable) {
+      hash = value.hash
+    }
+
+    if (!HashableTypes.any {|type| hash is type }) {
+      Fiber.abort("Set: %(value) could not be hashed.")
+    }
+
+    return _map.containsKey(hash)
+  }
+
+  remove(value) {
+    var hash = value
+    if (value is Hashable) {
+      hash = value.hash
+    }
+    if (!HashableTypes.any {|type| hash is type }) {
+      Fiber.abort("Set: %(value) could not be hashed.")
+    }
+    return _map.remove(hash)
+  }
+
+  get(value) {
+    var hash = value
+    if (value is Hashable) {
+      hash = value.hash
+    }
+    if (!HashableTypes.any {|type| hash is type }) {
+      Fiber.abort("Set: %(value) could not be hashed.")
+    }
+    return _map[hash]
+  }
+
+  set(value) {
+    var hash = value
+    if (value is Hashable) {
+      hash = value.hash
+    }
+    if (!HashableTypes.any {|type| hash is type }) {
+      Fiber.abort("Set: %(value) could not be hashed.")
+    }
+    _map[hash] = value
+  }
+
+  iterate(iter) { _map.values.iterate(iter) }
+  iteratorValue(iter) { _map.values.iteratorValue(iter) }
+}
 
 // A FIFO queue
 class Queue {
@@ -27,11 +93,70 @@ class Queue {
   dequeue() { _list.removeAt(0) }
   peek() { _list[0] }
 
+  // Returns a copy of underlying list
+  list() { _list[0..-1] }
+
   isEmpty { _list.isEmpty }
   count { _list.count }
+
+  iterate(iter) { _list.iterate(iter) }
+  iteratorValue(iter) { _list.iteratorValue(iter) }
 }
 
+class PriorityQueue {
 
+  static min() {
+    return new(DEFAULT_MIN_COMPARATOR)
+  }
+  static max() {
+    return new(DEFAULT_MAX_COMPARATOR)
+  }
+  static new() {
+    return new(DEFAULT_MIN_COMPARATOR)
+  }
+
+  construct new(comparator) {
+    _comparator = comparator
+    _list = []
+  }
+
+  count { _list.count }
+  isEmpty { _list.isEmpty }
+
+  // Returns a copy of underlying list
+  list() { _list[0..-1] }
+
+  get() {
+    return _list.removeAt(0)[1]
+  }
+
+  peek() {
+    return _list[0][1]
+  }
+
+  currentPriority() {
+    return _list[0][0]
+  }
+
+  put(item, priority) {
+    _list.add([priority, item])
+    _list.sort(_comparator)
+  }
+
+  comparator=(v) {
+    if (v != null && v is Fn) {
+      _comparator = v
+    } else {
+      _comparator = DEFAULT_COMPARATOR
+    }
+    _list.sort(_comparator)
+  }
+
+  iterate(iter) { _list.iterate(iter) }
+  iteratorValue(iter) { _list.iteratorValue(iter) }
+}
+
+// Not sure how reliable this is, won't advertise it yet.
 class Heap {
   construct new() {
     _comparator = Fn.new {|a, b| a < b }
@@ -70,7 +195,6 @@ class Heap {
   insert(element) {
     _list.insert(0, element)
     percolateDown(0)
-    // percolateUp(_list.count - 1)
   }
 
   del() {
@@ -119,53 +243,3 @@ class Heap {
 
   count { _size }
 }
-
-class Hashable {
-  hash() { this.toString }
-}
-
-class Set {
-  construct new() {
-    _map = {}
-  }
-
-  isEmpty { _map.isEmpty }
-
-  has(value) {
-    var hash = value
-    if (value is Hashable) {
-      hash = value.hash()
-    }
-    return _map.containsKey(hash)
-  }
-
-  remove(value) {
-    var hash = value
-    if (value is Hashable) {
-      hash = value.hash()
-    }
-    return _map.remove(hash)
-  }
-
-  get(value) {
-    var hash = value
-    if (value is Hashable) {
-      hash = value.hash()
-    }
-    return _map[hash]
-  }
-
-  set(value) {
-    var hash = value
-    if (value is Hashable) {
-      hash = value.hash()
-    }
-    _map[hash] = value
-  }
-
-  count { _map.count }
-
-  iterate(iter) { _map.values.iterate(iter) }
-  iteratorValue(iter) { _map.values.iteratorValue(iter) }
-}
-

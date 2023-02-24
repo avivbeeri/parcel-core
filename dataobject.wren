@@ -1,4 +1,3 @@
-import "json" for JSON
 class DataObject {
   construct new() {
     _data = {}
