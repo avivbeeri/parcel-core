@@ -1,3 +1,0 @@
-class Hook {
-  update(ctx) {}
-}
