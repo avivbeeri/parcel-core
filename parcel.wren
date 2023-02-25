@@ -451,17 +451,13 @@ class World is Stateful {
 
 // Generic element
 class Element {
+  construct new() {
+    _elements = []
+  }
   parent { _parent }
   parent=(v) { _parent = v }
-  update() {}
-  process(events) {}
-  draw() {}
-}
+  elements { _elements }
 
-class Scene is Element {
-  construct new(args) {
-    _elements = Queue.new()
-  }
   update() {
     for (element in _elements) {
       element.update()
@@ -477,7 +473,25 @@ class Scene is Element {
       element.draw()
     }
   }
-  elements { _elements }
+
+  addElement(element) {
+    _elements.add(element)
+    element.parent = this
+  }
+  removeSelf() {
+    if (parent) {
+      parent.removeElement(this)
+    }
+  }
+  removeElement(element) {
+    _elements.remove(element)
+  }
+}
+
+class Scene is Element {
+  construct new(args) {
+    super()
+  }
 
   game { _game }
   game=(v) { _game = v }

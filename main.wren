@@ -65,9 +65,8 @@ class TestScene is Scene {
   construct new(args) {
     super(args)
     var map = _map = TileMap8.new()
-    elements.add(Button.new(Vec.new(0,0), Vec.new(5,5), null))
-    elements.add(Box.new(Vec.new(10, 10), Vec.new(16,16), null))
-    elements.peek().parent = this
+    addElement(Button.new(Vec.new(0,0), Vec.new(5,5), null))
+    addElement(Box.new(Vec.new(10, 10), Vec.new(16,16), null))
     for (y in 0...32) {
       for (x in 0...32) {
         map[x,y] = Tile.new({
@@ -173,6 +172,7 @@ class TestScene is Scene {
 
 class Box is Element {
   construct new(pos, size, color) {
+    super()
     _pos = pos
     _size = size
     _color = color || Color.red
@@ -198,7 +198,7 @@ class Button is Box {
           Mouse.x < pos.x + size.x &&
           Mouse.y < pos.y + size.y) {
         System.print("close")
-        parent.elements.remove()
+        removeSelf()
         return
       }
     }
