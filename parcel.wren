@@ -534,6 +534,7 @@ var DIR_EIGHT = [
 
 class Graph {
   neighbours(pos) {}
+  allNeighbours(pos) {}
   cost(aPos, bPos) { 1 }
   heuristic(aPos, bPos) { 0 }
 }
@@ -592,6 +593,11 @@ class TileMap is Graph {
     _tiles[pair] = tile
   }
 
+  inBounds(vec) { inBounds(vec.x, vec.y) }
+  inBounds(x, y) { !this[x, y]["void"] }
+  isSolid(vec) { isSolid(vec.x, vec.y) }
+  isSolid(x, y) { !inBounds(x, y) || this[x, y]["solid"] }
+
   tiles { _tiles }
   xRange { _xRange }
   yRange { _yRange }
@@ -613,11 +619,17 @@ class TileMap4 is TileMap {
   neighbours(pos) {
     return DIR_FOUR.map {|dir| pos + dir }.where{|pos| !this[pos]["solid"] && !this[pos]["void"] }.toList
   }
+  allNeighbours(pos) {
+    return DIR_FOUR.map {|dir| pos + dir }.where{|pos| !this[pos]["void"] }.toList
+  }
 }
 class TileMap8 is TileMap {
   construct new() { super() }
   neighbours(pos) {
     return DIR_EIGHT.map {|dir| pos + dir }.where{|pos| !this[pos]["solid"] && !this[pos]["void"] }.toList
+  }
+  allNeighbours(pos) {
+    return DIR_EIGHT.map {|dir| pos + dir }.where{|pos| !this[pos]["void"] }.toList
   }
 }
 
@@ -783,26 +795,26 @@ class Line {
     var ix = 0
     var iy = 0
     while (ix < nx || iy < ny) {
-//        if ((0.5 + ix) / nx < (0.5 + iy) / ny) {
-        if ((1 + 2*ix) * ny < (1 + 2*iy) * nx) {
-            // next step is horizontal
-            p.x = p.x + sign_x
-            ix = ix + 1
-        } else {
-            // next step is vertical
-            p.y = p.y + sign_y
-            iy = iy + 1
-        }
-        points.add(Vec.new(p.x, p.y))
+      if ((1 + 2*ix) * ny < (1 + 2*iy) * nx) {
+       // next step is horizontal
+        p.x = p.x + sign_x
+        ix = ix + 1
+      } else {
+        // next step is vertical
+        p.y = p.y + sign_y
+        iy = iy + 1
+      }
+      points.add(Vec.new(p.x, p.y))
     }
     return points
   }
+
   static linear(p0, p1) {
-    var points = []
+   var points = []
     var n = chebychev(p0,p1)
     for (step in 0..n) {
-        var t = (n == 0) ? 0.0 : step / n
-        points.add(vecRound(vecLerp(p0, t, p1)))
+      var t = (n == 0) ? 0.0 : step / n
+      points.add(vecRound(vecLerp(p0, t, p1)))
     }
     return points
   }
