@@ -78,7 +78,7 @@ var LogColors = {
 class Log {
   static level=(v) { __level = v }
   static print(level, text) {
-    if (level >= __level) {
+    if (level >= (__level || 1)) {
       System.print("%(LogColors[level])[%(LogLevels[level])]\e[0m: %(text)")
     }
   }
@@ -841,7 +841,7 @@ var error = fiber.try()
 if (fiber.error) {
   Log.w(fiber.error)
 }
-Log.level = Config ? Config["logLevel"] : 0
+Log.level = (Config && Config["logLevel"]) || 0
 var Seed = (Config && Config["seed"]) || Platform.time
 Log.d("RNG Seed: %(Seed)")
 RNG = Random.new(Seed)
