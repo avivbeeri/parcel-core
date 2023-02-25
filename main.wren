@@ -1,11 +1,12 @@
 import "graphics" for Canvas, Color
 import "math" for Vec
 import "fov" for Vision
-import "input" for Keyboard
+import "input" for Keyboard, Mouse
 import "parcel" for
   MAX_TURN_SIZE,
   ParcelMain,
   Scene,
+  Element,
   World,
   Entity,
   FastAction,
@@ -64,6 +65,9 @@ class TestScene is Scene {
   construct new(args) {
     super(args)
     var map = _map = TileMap8.new()
+    elements.add(Button.new(Vec.new(0,0), Vec.new(5,5), null))
+    elements.add(Box.new(Vec.new(10, 10), Vec.new(16,16), null))
+    elements.peek().parent = this
     for (y in 0...32) {
       for (x in 0...32) {
         map[x,y] = Tile.new({
@@ -101,6 +105,7 @@ class TestScene is Scene {
   }
 
   update() {
+    super.update()
     var changed = false
     if (Keyboard["left"].justPressed) {
       _origin.x = _origin.x - 1
@@ -161,7 +166,43 @@ class TestScene is Scene {
         }
       }
     }
+    super.draw()
     Canvas.print("@", _origin.x * 16 + 8, _origin.y * 16 + 8, Color.white)
+  }
+}
+
+class Box is Element {
+  construct new(pos, size, color) {
+    _pos = pos
+    _size = size
+    _color = color || Color.red
+  }
+  pos { _pos }
+  size { _size }
+  color { _color }
+  draw() {
+    Canvas.rect(pos.x, pos.y, size.x, size.y, color)
+  }
+}
+class Button is Box {
+  construct new(pos, size, color) {
+    super(pos, size, color)
+  }
+
+  update() {
+    if (Mouse["left"].justPressed) {
+      System.print("click")
+      System.print(Mouse.pos)
+      if (Mouse.x >= pos.x &&
+          Mouse.y >= pos.y &&
+          Mouse.x < pos.x + size.x &&
+          Mouse.y < pos.y + size.y) {
+        System.print("close")
+        parent.elements.remove()
+        return
+      }
+    }
+    super.update()
   }
 }
 

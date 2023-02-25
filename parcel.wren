@@ -449,10 +449,35 @@ class World is Stateful {
   }
 }
 
-class Scene {
-  construct new(args) {}
+// Generic element
+class Element {
+  parent { _parent }
+  parent=(v) { _parent = v }
   update() {}
+  process(events) {}
   draw() {}
+}
+
+class Scene is Element {
+  construct new(args) {
+    _elements = Queue.new()
+  }
+  update() {
+    for (element in _elements) {
+      element.update()
+    }
+  }
+  process(events) {
+    for (element in _elements) {
+      element.process(events)
+    }
+  }
+  draw() {
+    for (element in _elements) {
+      element.draw()
+    }
+  }
+  elements { _elements }
 
   game { _game }
   game=(v) { _game = v }
@@ -830,6 +855,9 @@ class Line {
     return Vec.new(M.lerp(v0.x, p, v1.x), M.lerp(v0.y, p, v1.y))
   }
 }
+
+
+
 
 // ==================================
 var Config
