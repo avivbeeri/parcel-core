@@ -172,7 +172,7 @@ class FakeAction is Action {
     return ActionResult.success
   }
   perform() {
-    src.pos.z = 1
+    src.zone = src.zone + 1
     return ActionResult.success
   }
 }
@@ -186,6 +186,7 @@ class Entity is Stateful {
     _actions = Queue.new()
     _events = Queue.new()
     _lastTurn = 0
+    _zone = 0
   }
 
   pushAction(action) { _actions.add(action) }
@@ -202,6 +203,8 @@ class Entity is Stateful {
 
   state { _state }
   state=(v) { _state = v }
+  zone { _zone }
+  zone=(v) { _zone = v }
   pos { _pos }
   pos=(v) { _pos = v }
   size { _size }
@@ -224,9 +227,6 @@ class Entity is Stateful {
            x <= pos.x + size.x - 1 &&
            pos.y <= y &&
            y <= pos.y + size.y - 1
-  }
-  occupies(x, y, z) {
-    return occupies(x, y) && z == pos.z
   }
 
   name { null }
@@ -287,8 +287,8 @@ class World is Stateful {
 
   // Does not guarantee an order
   allEntities { _entities.values.toList }
-  otherEntities() { _entities.values.where{|entity| entity.pos.z != _zoneIndex }.toList  }
-  entities() { _entities.values.where{|entity| entity.pos == null || entity.pos.z == _zoneIndex }.toList  }
+  otherEntities() { _entities.values.where{|entity| entity.zone != _zoneIndex }.toList  }
+  entities() { _entities.values.where{|entity| entity.pos == null || entity.zone == _zoneIndex }.toList  }
 
   complete { _complete }
   complete=(v) { _complete = v }
@@ -334,6 +334,7 @@ class World is Stateful {
 
   addEntity(entity) {
     var id = nextId()
+    entity.zone = _zoneIndex
     _entities[id] = entity.bind(this, id)
     // TODO Add an event for adding an entity to the world
     var t = _turn
@@ -433,7 +434,7 @@ class World is Stateful {
     result = action.perform()
     actor.endTurn()
     actor.lastTurn = turn
-    if (actor.pos == null || actor.pos.z == _zoneIndex) {
+    if (actor.pos == null || actor.zone == _zoneIndex) {
       Log.d("%(actor): next turn is  %(turn + action.cost())")
       _queue.add(actorId, turn + action.cost())
     }

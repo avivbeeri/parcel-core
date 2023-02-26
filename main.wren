@@ -42,9 +42,11 @@ class Player is Entity {
     super()
   }
   name { "Player" }
+  /*
   getAction() {
     return FastAction.new()
   }
+  */
 }
 
 class Turn is Entity {
@@ -93,12 +95,13 @@ class TestScene is Scene {
     world.addZone(Zone.new(map))
     var turn = world.addEntity("turn", Turn.new())
     world.addEntity(Entity.new())
-    //player.pushAction(FakeAction.new())
     world.start()
     for (i in 0...5) {
       world.advance()
     }
     var player = world.addEntity("player", Player.new())
+    player.pushAction(FastAction.new())
+    player.pushAction(FakeAction.new())
     Log.i("Adding Player")
     for (i in 0...12) {
       world.advance()
