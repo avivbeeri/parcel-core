@@ -664,9 +664,9 @@ class TileMap8 is TileMap {
 
     // diagonal
     if (dx != 0 && dy != 0) {
-      if (!isSolid(cx + dx, cy)) {
+      if (isSolid(cx + dx, cy)) {
         return next
-      } else if (!isSolid(cx, cy + dy)) {
+      } else if (isSolid(cx, cy + dy)) {
         return next
       }
 
@@ -679,22 +679,22 @@ class TileMap8 is TileMap {
     } else {
       // horizontal
       if (dx != 0) {
-        if (!isSolid(cx, cy + 1)) {
-          if (isSolid(cx + dx, cy + 1)) {
+        if (isSolid(cx, cy + 1)) {
+          if (!isSolid(cx + dx, cy + 1)) {
             return next
           }
-        } else if (!isSolid(cx, cy - 1)) {
-          if (isSolid(cx + dx, cy - 1)) {
+        } else if (isSolid(cx, cy - 1)) {
+          if (!isSolid(cx + dx, cy - 1)) {
             return next
           }
         }
       } else {
-        if (!isSolid(cx + 1, cy)) {
-          if (isSolid(cx + 1, cy + dy)) {
+        if (isSolid(cx + 1, cy)) {
+          if (!isSolid(cx + 1, cy + dy)) {
             return next
           }
-        } else if (!isSolid(cx - 1, cy)) {
-          if (isSolid(cx - 1, cy + dy)) {
+        } else if (isSolid(cx - 1, cy)) {
+          if (!isSolid(cx - 1, cy + dy)) {
             return next
           }
         }
@@ -834,17 +834,30 @@ class AStar {
     }
     return cameFrom
   }
-  static buildFastPath(cameFrom, start, goal) {
+  static buildFastPath(map, start, goal, cameFrom) {
     var current = goal
+    if (!cameFrom) {
+      Fiber.abort("There is no valid path")
+      return
+    }
     if (cameFrom[goal] == null) {
       return null // There is no valid path
     }
 
     var path = []
-    var prev = null
+    var next = null
     while (start != current) {
       path.add(current)
-      current = cameFrom[current]
+      next = cameFrom[current]
+      var d = next - current
+      var unit = Vec.new(d.x.sign, d.y.sign)
+
+      var intermediate = current
+      while (intermediate != next && intermediate != start) {
+        path.add(intermediate)
+        intermediate = intermediate + unit
+      }
+      current = next
     }
     for (pos in path) {
       map[pos]["seen"] = true

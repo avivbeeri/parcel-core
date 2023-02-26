@@ -1,3 +1,4 @@
+var VISION = true
 import "graphics" for Canvas, Color
 import "math" for Vec
 import "fov" for Vision, Vision2
@@ -157,7 +158,9 @@ class TestScene is Scene {
         }
       }
       _origin = player.pos
-      System.print(AStar.fastSearch(_map, _origin, Vec.new(5,6)))
+      //System.print(AStar.search(_map, _origin, Vec.new(5, 6)))
+      var search = AStar.fastSearch(_map, _origin, Vec.new(5,6))
+      System.print(AStar.buildFastPath(_map, _origin, Vec.new(5, 6), search))
       Vision2.new(_map, _origin).compute()
     }
   }
@@ -168,7 +171,7 @@ class TestScene is Scene {
 
     for (y in map.yRange) {
       for (x in map.xRange) {
-        if (!map[x, y]["visible"] || map[x, y]["visible"] == "maybe") {
+        if (!VISION && (!map[x, y]["visible"] || map[x, y]["visible"] == "maybe")) {
           continue
         }
         var color = Color.white
