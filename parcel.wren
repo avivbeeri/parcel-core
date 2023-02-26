@@ -1,5 +1,5 @@
 import "dome" for Window, Process, Platform
-import "graphics" for Canvas
+import "graphics" for Canvas, Color, Font
 import "collections" for PriorityQueue, Queue, Set, HashMap
 import "math" for Vec, Elegant, M
 import "json" for Json
@@ -636,6 +636,8 @@ class TileMap is Graph {
   inBounds(x, y) { !this[x, y]["void"] }
   isSolid(vec) { isSolid(vec.x, vec.y) }
   isSolid(x, y) { !inBounds(x, y) || this[x, y]["solid"] }
+  isFloor(vec) { isFloor(vec.x, vec.y) }
+  isFloor(x, y) { inBounds(x, y) && !this[x, y]["solid"] }
 
   tiles { _tiles }
   xRange { _xRange }
@@ -871,6 +873,77 @@ class Line {
 }
 
 
+class DefaultFont {
+  static getArea(text) {
+    return Vec.new(text.count * 8, 8)
+  }
+}
+class TextUtils {
+  static print(text, settings) {
+    text = text is String ? text : text.toString
+    var color = settings["color"] || Color.black
+    var align = settings["align"] || "left"
+    var position = settings["position"] || Vec.new()
+    // TODO vertical size?
+    var size = settings["size"] || Vec.new(Canvas.width, Canvas.height)
+    var font = settings["font"] || Font.default
+    var fontObj = Font[settings["font"]] || DefaultFont
+    var overflow = settings["overflow"] || false
+
+    var lines = []
+    var words = text.split(" ")
+    var maxWidth = size.x
+    var nextLine
+    var lineDims = []
+    var currentLine
+
+    while (true) {
+      currentLine = words.join(" ")
+      var area = fontObj.getArea(currentLine)
+      nextLine = []
+      while (area.x > maxWidth && words.count > 1) {
+        // remove the last word, add it to the start of the nextLine
+        nextLine.insert(0, words.removeAt(-1))
+        currentLine = words.join(" ")
+        // compute the current line's area now
+        area = fontObj.getArea(currentLine)
+        // and recheck
+      }
+
+      lineDims.add(area)
+      lines.add(currentLine)
+      if (nextLine.count == 0) {
+        break
+      }
+      words = nextLine
+    }
+
+    if (!overflow) {
+      Canvas.clip(position.x, position.y, size.x, size.y)
+    }
+
+    var x
+    var y = position.y
+    for (lineNumber in 0...lines.count) {
+      if (align == "left") {
+        x = position.x
+      } else if (align == "center") {
+        x = ((size.x + position.x) - lineDims[lineNumber].x) / 2
+      } else if (align == "right") {
+        x = position.x + size.x - lineDims[lineNumber].x
+      } else {
+        Fiber.abort("invalid text alignment: %(align)")
+      }
+      Canvas.print(lines[lineNumber], x, y, color, font)
+      y = y + lineDims[lineNumber].y
+    }
+
+    if (!overflow) {
+      Canvas.clip()
+    }
+    return Vec.new(size.x, y - position.y)
+  }
+}
 
 
 // ==================================

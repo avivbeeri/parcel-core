@@ -1,10 +1,11 @@
 import "graphics" for Canvas, Color
 import "math" for Vec
-import "fov" for Vision
+import "fov" for Vision, Vision2
 import "input" for Keyboard, Mouse
 import "parcel" for
   MAX_TURN_SIZE,
   ParcelMain,
+  TextUtils,
   Scene,
   Element,
   World,
@@ -65,8 +66,9 @@ class TestScene is Scene {
   construct new(args) {
     super(args)
     var map = _map = TileMap8.new()
-    addElement(Button.new(Vec.new(0,0), Vec.new(5,5), null))
-    addElement(Box.new(Vec.new(10, 10), Vec.new(16,16), null))
+    addElement(Button.new(Vec.new(30,30), Vec.new(70, 32), "Click goes the weasel", null))
+    addElement(Box.new(Vec.new(10, 15), Vec.new(16,16), null))
+
     for (y in 0...32) {
       for (x in 0...32) {
         map[x,y] = Tile.new({
@@ -83,7 +85,7 @@ class TestScene is Scene {
     for (point in Line.walk(Vec.new(4,21), Vec.new(17,21))) {
         map[point]["solid"] = true
     }
-    Vision.new(map, _origin).compute()
+    Vision2.new(map, _origin).compute()
 
     // System.print(AStar.search(map, Vec.new(0,0), Vec.new(5,6)))
     var world = _world = World.new()
@@ -135,7 +137,7 @@ class TestScene is Scene {
           }
         }
       }
-      Vision.new(_map, _origin).compute()
+      Vision2.new(_map, _origin).compute()
     }
   }
 
@@ -185,9 +187,12 @@ class Box is Element {
   }
 }
 class Button is Box {
-  construct new(pos, size, color) {
+  construct new(pos, size, text, color) {
     super(pos, size, color)
+    _text = text
   }
+
+  text { _text }
 
   update() {
     if (Mouse["left"].justPressed) {
@@ -203,6 +208,20 @@ class Button is Box {
       }
     }
     super.update()
+  }
+
+  draw() {
+    var offset = (size.y / 2) - 4
+    var location = pos + Vec.new(0, offset)
+    location = pos
+    TextUtils.print(text, {
+      "position": location,
+      "size": size,
+      "color": color,
+      //"align": "center"
+      "align":"left"
+    })
+    super.draw()
   }
 }
 
