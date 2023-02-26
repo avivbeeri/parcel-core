@@ -215,6 +215,7 @@ class Entity is Stateful {
   // Entities don't update themselves
   // They supply the next action they want to perform
   // and the "world" applies it.
+  hasActions() { !_actions.isEmpty }
   getAction() {
     return _actions.dequeue() || Action.none
   }

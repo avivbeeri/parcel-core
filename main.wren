@@ -26,6 +26,24 @@ import "parcel" for
 
 var Search = BreadthFirst
 
+class SimpleMoveAction is Action {
+  construct new(dir) {
+    super()
+    _dir = dir
+  }
+  evaluate() {
+    if (ctx.zone.map.isSolid(src.pos + _dir)) {
+      return ActionResult.invalid
+    }
+    return ActionResult.success
+  }
+
+  perform() {
+    src.pos = src.pos + _dir
+    return ActionResult.success
+  }
+  cost() { MAX_TURN_SIZE }
+}
 class DeclareTurnAction is Action {
   construct new(turn) {
     super()
@@ -42,11 +60,12 @@ class Player is Entity {
     super()
   }
   name { "Player" }
-  /*
   getAction() {
-    return FastAction.new()
+    if (hasActions()) {
+      return super.getAction()
+    }
+    return null
   }
-  */
 }
 
 class Turn is Entity {
@@ -100,8 +119,6 @@ class TestScene is Scene {
       world.advance()
     }
     var player = world.addEntity("player", Player.new())
-    player.pushAction(FastAction.new())
-    player.pushAction(FakeAction.new())
     Log.i("Adding Player")
     for (i in 0...12) {
       world.advance()
@@ -110,26 +127,26 @@ class TestScene is Scene {
 
   update() {
     super.update()
+    var player = _world.getEntityByTag("player")
     var changed = false
     if (Keyboard["left"].justPressed) {
-      _origin.x = _origin.x - 1
       changed = true
-
+      player.pushAction(SimpleMoveAction.new(Vec.new(-1, 0)))
     }
     if (Keyboard["up"].justPressed) {
-      _origin.y = _origin.y - 1
       changed = true
-
+      player.pushAction(SimpleMoveAction.new(Vec.new(0, -1)))
     }
     if (Keyboard["right"].justPressed) {
-      _origin.x = _origin.x + 1
       changed = true
-
+      player.pushAction(SimpleMoveAction.new(Vec.new(1, 0)))
     }
     if (Keyboard["down"].justPressed) {
-      _origin.y = _origin.y + 1
       changed = true
+      player.pushAction(SimpleMoveAction.new(Vec.new(0, 1)))
     }
+    _world.advance()
+
     if (changed) {
       for (y in _map.yRange) {
         for (x in _map.xRange) {
@@ -140,6 +157,7 @@ class TestScene is Scene {
           }
         }
       }
+      _origin = player.pos
       Vision2.new(_map, _origin).compute()
     }
   }
