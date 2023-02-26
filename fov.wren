@@ -13,6 +13,12 @@ var Transforms = [
 class Vision {
   construct new(map, origin) {
     _map = map
+    _depth = null
+    _origin = origin
+  }
+  construct new(map, origin, maxDepth) {
+    _map = map
+    _maxDepth = maxDepth
     _origin = origin
   }
 
@@ -24,7 +30,7 @@ class Vision {
   }
 
   scan(y, start, end, transform) {
-    if (start >= end) {
+    if ((_maxDepth && y > _maxDepth) || start >= end) {
       return
     }
     var xmin = ((y - 0.5) * start).round
@@ -122,6 +128,12 @@ class Row {
 class Vision2 {
   construct new(map, origin) {
     _map = map
+    _maxDepth = null
+    _origin = origin
+  }
+  construct new(map, origin, maxDepth) {
+    _map = map
+    _maxDepth = maxDepth
     _origin = origin
   }
 
@@ -159,6 +171,9 @@ class Vision2 {
   }
 
   scan(quadrant, row) {
+    if (_maxDepth && row.depth > _maxDepth) {
+      return
+    }
     var prev = null
     var tiles = row.tiles
     for (tile in tiles) {
