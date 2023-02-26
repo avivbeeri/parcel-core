@@ -1,4 +1,5 @@
 var VISION = true
+var MODE = 0
 import "graphics" for Canvas, Color
 import "math" for Vec
 import "fov" for Vision, Vision2
@@ -26,6 +27,7 @@ import "parcel" for
   AStar
 
 var Search = BreadthFirst
+var Target = Vec.new(16, 6)
 
 class SimpleMoveAction is Action {
   construct new(dir) {
@@ -127,6 +129,10 @@ class TestScene is Scene {
     super.update()
     var player = _world.getEntityByTag("player")
     var changed = false
+    if (Keyboard["space"].justPressed) {
+      MODE = MODE + 1
+      search()
+    }
     if (Keyboard["left"].justPressed) {
       changed = true
       player.pushAction(SimpleMoveAction.new(Vec.new(-1, 0)))
@@ -158,13 +164,34 @@ class TestScene is Scene {
         }
       }
       _origin = player.pos
-      //System.print(AStar.search(_map, _origin, Vec.new(5, 6)))
-      var search = AStar.fastSearch(_map, _origin, Vec.new(5,6))
-      System.print(AStar.buildFastPath(_map, _origin, Vec.new(5, 6), search))
+      search()
+
+      /*
+      */
       Vision2.new(_map, _origin).compute()
     }
   }
 
+  search() {
+    if (!_origin) {
+      return
+    }
+    for (y in _map.yRange) {
+      for (x in _map.xRange) {
+        _map[x, y]["seen"] = false
+          _map[x, y]["cost"] = null
+      }
+    }
+    if (MODE == 0) {
+    } else if (MODE == 1) {
+      Dijkstra.search(_map, _origin, Target)
+    } else if (MODE == 2) {
+      AStar.search(_map, _origin, Target)
+    } else if (MODE == 3) {
+      var search = AStar.fastSearch(_map, _origin, Target)
+        AStar.buildFastPath(_map, _origin, Target, search)
+    }
+  }
   draw() {
     Canvas.cls()
     var map = _world.zone.map

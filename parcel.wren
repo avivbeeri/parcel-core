@@ -706,9 +706,15 @@ class TileMap8 is TileMap {
 
 class BreadthFirst {
   static search(map, start, goal) {
-    var frontier = Queue.new()
-    frontier.add(start)
     var cameFrom = HashMap.new()
+    var frontier = Queue.new()
+    if (!(start is Sequence)) {
+      start = [ start ]
+    }
+    for (pos in start) {
+      frontier.add(pos)
+      cameFrom[pos] = null
+    }
     while (!frontier.isEmpty) {
       var current = frontier.remove()
       if (current == goal) {
@@ -717,12 +723,25 @@ class BreadthFirst {
       for (next in map.neighbours(current)) {
         if (!cameFrom.containsKey(next)) {
           cameFrom[next] = current
+          map[next]["cost"] = 0
           frontier.add(next)
-          map[next]["seen"] = true
         }
       }
     }
-    return cameFrom
+    var current = goal
+    if (cameFrom[goal] == null) {
+      return null // There is no valid path
+    }
+
+    var path = []
+    while (!start.contains(current)) {
+      path.add(current)
+      current = cameFrom[current]
+    }
+    for (pos in path) {
+      map[pos]["seen"] = true
+    }
+    return path
   }
 }
 
