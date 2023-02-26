@@ -524,10 +524,10 @@ var DIR_FOUR = [
   Vec.new(0, 1) // down
 ]
 var DIR_EIGHT = [
-  Vec.new(-1, 0), // W
   Vec.new(0, -1), // N
   Vec.new(1, 0), // E
   Vec.new(0, 1), // S
+  Vec.new(-1, 0), // W
   Vec.new(-1, -1), // NW
   Vec.new(1, -1), // NE
   Vec.new(1, 1), // SE
@@ -635,9 +635,15 @@ class TileMap8 is TileMap {
   allNeighbours(pos) {
     return DIR_EIGHT.map {|dir| pos + dir }.where{|pos| this.inBounds(pos) }.toList
   }
+  cost(aPos, bPos) {
+    return Line.chebychev(bPos,aPos)
+  }
+  heuristic(aPos, bPos) {
+    return cost(aPos, bPos)
+  }
   successors(current, start, end) {
     var successors = []
-    for (node in neighbours(current)) {
+    for (node in allNeighbours(current)) {
       var dx = M.mid(-1, node.x - current.x, 1)
       var dy = M.mid(-1, node.y - current.y, 1)
 
@@ -664,9 +670,8 @@ class TileMap8 is TileMap {
 
     // diagonal
     if (dx != 0 && dy != 0) {
-      if (isSolid(cx + dx, cy)) {
-        return next
-      } else if (isSolid(cx, cy + dy)) {
+      if ((isFloor(cx - dx, cy + dy) && isSolid(cx - dx, cy)) ||
+          (isFloor(cx + dx, cy - dy) && isSolid(cx, cy - dy))) {
         return next
       }
 
@@ -679,28 +684,21 @@ class TileMap8 is TileMap {
     } else {
       // horizontal
       if (dx != 0) {
-        if (isSolid(cx, cy + 1)) {
-          if (!isSolid(cx + dx, cy + 1)) {
-            return next
-          }
-        } else if (isSolid(cx, cy - 1)) {
-          if (!isSolid(cx + dx, cy - 1)) {
-            return next
-          }
+        if ((isFloor(cx + dx, cy + 1) && isSolid(cx, cy + 1)) ||
+            (isFloor(cx + dx, cy - 1) && isSolid(cx, cy - 1))) {
+          return next
         }
       } else {
-        if (isSolid(cx + 1, cy)) {
-          if (!isSolid(cx + 1, cy + dy)) {
-            return next
-          }
-        } else if (isSolid(cx - 1, cy)) {
-          if (!isSolid(cx - 1, cy + dy)) {
-            return next
-          }
+        if ((isFloor(cx + 1, cy + dy) && isSolid(cx + 1, cy)) ||
+            (isFloor(cx - 1, cy + dy) && isSolid(cx - 1, cy))) {
+          return next
         }
       }
     }
-    return jump(next.x, next.y, dx, dy, start, end)
+    if (isFloor(cx + dx, cy) || isFloor(cx, cy + dy)) {
+      return jump(next.x, next.y, dx, dy, start, end)
+    }
+    return null
   }
 }
 
@@ -813,6 +811,7 @@ class Dijkstra {
           var priority = newCost
           frontier.add(next, newCost)
           cameFrom[next] = current
+          list.add(next)
         }
       }
     }
@@ -834,18 +833,23 @@ class AStar {
     frontier.add(start, 0)
     cameFrom[start] = null
     costSoFar[start] = 0
+
+    var closed = Set.new()
+
     while (!frontier.isEmpty) {
       var current = frontier.remove()
+      closed.add(current)
       if (current == goal) {
         break
       }
       var currentCost = costSoFar[current]
+      var list = []
       for (next in map.successors(current, start, goal)) {
         var newCost = currentCost + map.cost(current, next)
         if (!costSoFar.containsKey(next) || newCost < costSoFar[next]) {
-          costSoFar[next] = newCost
           map[next]["cost"] = newCost
           var priority = newCost + map.heuristic(next, goal)
+          costSoFar[next] = newCost
           frontier.add(next, priority)
           cameFrom[next] = current
         }
@@ -868,8 +872,9 @@ class AStar {
     while (start != current) {
       path.add(current)
       next = cameFrom[current]
-      var d = next - current
-      var unit = Vec.new(d.x.sign, d.y.sign)
+      var dx = M.mid(-1, next.x - current.x, 1)
+      var dy = M.mid(-1, next.y - current.y, 1)
+      var unit = Vec.new(dx, dy)
 
       var intermediate = current
       while (intermediate != next && intermediate != start) {
@@ -907,9 +912,9 @@ class AStar {
       for (next in map.neighbours(current)) {
         var newCost = currentCost + map.cost(current, next)
         if (!costSoFar.containsKey(next) || newCost < costSoFar[next]) {
-          costSoFar[next] = newCost
           map[next]["cost"] = newCost
           var priority = newCost + map.heuristic(next, goal)
+          costSoFar[next] = newCost
           frontier.add(next, priority)
           cameFrom[next] = current
         }
@@ -972,7 +977,7 @@ class Line {
   }
 
   static chebychev(v0, v1) {
-    return M.max(v1.x-v0.x, v1.y-v0.y)
+    return M.max((v1.x-v0.x).abs, (v1.y-v0.y).abs)
   }
 
   static vecRound(vec){
