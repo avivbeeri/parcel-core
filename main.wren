@@ -35,7 +35,7 @@ class SimpleMoveAction is Action {
     if (ctx.zone.map.isSolid(src.pos + _dir)) {
       return ActionResult.invalid
     }
-    return ActionResult.success
+    return ActionResult.valid
   }
 
   perform() {
@@ -97,7 +97,6 @@ class TestScene is Scene {
         })
       }
     }
-    _origin = Vec.new(16, 18)
     map[12, 16]["solid"] = true
     map[13, 17]["solid"] = true
     for (point in Line.walk(Vec.new(4,19), Vec.new(17,19))) {
@@ -106,9 +105,7 @@ class TestScene is Scene {
     for (point in Line.walk(Vec.new(4,21), Vec.new(17,21))) {
         map[point]["solid"] = true
     }
-    Vision2.new(map, _origin).compute()
 
-    // System.print(AStar.search(map, Vec.new(0,0), Vec.new(5,6)))
     var world = _world = World.new()
     world.addZone(Zone.new(map))
     world.addZone(Zone.new(map))
@@ -150,6 +147,8 @@ class TestScene is Scene {
     if (changed) {
       for (y in _map.yRange) {
         for (x in _map.xRange) {
+          _map[x, y]["seen"] = false
+          _map[x, y]["cost"] = null
           if (_map[x, y]["visible"]) {
             _map[x, y]["visible"] = "maybe"
           } else {
@@ -158,6 +157,7 @@ class TestScene is Scene {
         }
       }
       _origin = player.pos
+      System.print(AStar.fastSearch(_map, _origin, Vec.new(5,6)))
       Vision2.new(_map, _origin).compute()
     }
   }
@@ -180,16 +180,20 @@ class TestScene is Scene {
         }
         if (map[x, y]["void"]) {
         } else if (map[x, y]["solid"]) {
-          Canvas.print("#", x * 16 + 8, y * 16 + 8, Color.lightgray)
+          Canvas.print("#", x * 16 + 4, y * 16 + 4, Color.lightgray)
         } else if (map[x, y]["cost"]) {
-          Canvas.print(map[x, y]["cost"], x * 16, y * 16, color)
+          Canvas.rectfill(x * 16, y*16, 16, 16, Color.darkgray)
+          Canvas.print(map[x, y]["cost"], x * 16 + 4, y * 16 + 4, color)
+
         } else {
-          Canvas.print(".", x * 16 + 8, y * 16 + 8, color)
+          Canvas.print(".", x * 16 + 4, y * 16 + 4, color)
         }
       }
     }
     super.draw()
-    Canvas.print("@", _origin.x * 16 + 8, _origin.y * 16 + 8, Color.white)
+    if (_origin) {
+      Canvas.print("@", _origin.x * 16 + 4, _origin.y * 16 + 4, Color.white)
+    }
   }
 }
 

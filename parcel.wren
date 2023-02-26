@@ -63,6 +63,7 @@ class Stateful {
 class ActionResult {
   static success { ActionResult.new(true) }
   static failure { ActionResult.new(false) }
+  static valid { ActionResult.new(true, false) }
   static invalid { ActionResult.new(false, true) }
 
   construct new(success) {
@@ -620,19 +621,86 @@ class TileMap is Graph {
 class TileMap4 is TileMap {
   construct new() { super() }
   neighbours(pos) {
-    return DIR_FOUR.map {|dir| pos + dir }.where{|pos| !this[pos]["solid"] && !this[pos]["void"] }.toList
+    return DIR_FOUR.map {|dir| pos + dir }.where{|pos| !this.isSolid(pos) }.toList
   }
   allNeighbours(pos) {
-    return DIR_FOUR.map {|dir| pos + dir }.where{|pos| !this[pos]["void"] }.toList
+    return DIR_FOUR.map {|dir| pos + dir }.where{|pos| this.inBounds(pos) }.toList
   }
 }
 class TileMap8 is TileMap {
   construct new() { super() }
   neighbours(pos) {
-    return DIR_EIGHT.map {|dir| pos + dir }.where{|pos| !this[pos]["solid"] && !this[pos]["void"] }.toList
+    return DIR_EIGHT.map {|dir| pos + dir }.where{|pos| !this.isSolid(pos) }.toList
   }
   allNeighbours(pos) {
-    return DIR_EIGHT.map {|dir| pos + dir }.where{|pos| !this[pos]["void"] }.toList
+    return DIR_EIGHT.map {|dir| pos + dir }.where{|pos| this.inBounds(pos) }.toList
+  }
+  successors(current, start, end) {
+    var successors = []
+    for (node in neighbours(current)) {
+      var dx = M.mid(-1, node.x - current.x, 1)
+      var dy = M.mid(-1, node.y - current.y, 1)
+
+      var jumpPoint = jump(current.x, current.y, dx, dy, start, end)
+      if (jumpPoint) {
+        successors.add(jumpPoint)
+      }
+    }
+    return successors
+  }
+
+  jump(cx, cy, dx, dy, start, end) {
+    var next = Vec.new(cx + dx, cy + dy)
+
+    // Blocked, no jump
+    if (isSolid(next)) {
+      return null
+    }
+
+    // We can jump to goal
+    if (next == end) {
+      return next
+    }
+
+    // diagonal
+    if (dx != 0 && dy != 0) {
+      if (!isSolid(cx + dx, cy)) {
+        return next
+      } else if (!isSolid(cx, cy + dy)) {
+        return next
+      }
+
+      // Check horizonstal and vertical neighbours
+      if (jump(next.x, next.y, dx, 0, start, end) != null ||
+          jump(next.x, next.y, 0, dy, start, end) != null) {
+
+        return next
+      }
+    } else {
+      // horizontal
+      if (dx != 0) {
+        if (!isSolid(cx, cy + 1)) {
+          if (isSolid(cx + dx, cy + 1)) {
+            return next
+          }
+        } else if (!isSolid(cx, cy - 1)) {
+          if (isSolid(cx + dx, cy - 1)) {
+            return next
+          }
+        }
+      } else {
+        if (!isSolid(cx + 1, cy)) {
+          if (isSolid(cx + 1, cy + dy)) {
+            return next
+          }
+        } else if (!isSolid(cx - 1, cy)) {
+          if (isSolid(cx - 1, cy + dy)) {
+            return next
+          }
+        }
+      }
+    }
+    return jump(next.x, next.y, dx, dy, start, end)
   }
 }
 
@@ -734,6 +802,55 @@ class Dijkstra {
 }
 
 class AStar {
+  static fastSearch(map, start, goal) {
+    if (goal == null) {
+      Fiber.abort("AStarSearch doesn't work without a goal")
+    }
+    var frontier = PriorityQueue.min()
+    var cameFrom = HashMap.new()
+    var costSoFar = HashMap.new()
+    if (start is Sequence) {
+      Fiber.abort("fastSearch doesn't support multiple goals")
+    }
+    frontier.add(start, 0)
+    cameFrom[start] = null
+    costSoFar[start] = 0
+    while (!frontier.isEmpty) {
+      var current = frontier.remove()
+      if (current == goal) {
+        break
+      }
+      var currentCost = costSoFar[current]
+      for (next in map.successors(current, start, goal)) {
+        var newCost = currentCost + map.cost(current, next)
+        if (!costSoFar.containsKey(next) || newCost < costSoFar[next]) {
+          costSoFar[next] = newCost
+          map[next]["cost"] = newCost
+          var priority = newCost + map.heuristic(next, goal)
+          frontier.add(next, priority)
+          cameFrom[next] = current
+        }
+      }
+    }
+    return cameFrom
+  }
+  static buildFastPath(cameFrom, start, goal) {
+    var current = goal
+    if (cameFrom[goal] == null) {
+      return null // There is no valid path
+    }
+
+    var path = []
+    var prev = null
+    while (start != current) {
+      path.add(current)
+      current = cameFrom[current]
+    }
+    for (pos in path) {
+      map[pos]["seen"] = true
+    }
+
+  }
   static search(map, start, goal) {
     if (goal == null) {
       Fiber.abort("AStarSearch doesn't work without a goal")
