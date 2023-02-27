@@ -188,7 +188,6 @@ class TestScene is Scene {
           _map[x, y]["cost"] = null
       }
     }
-    var start = Platform.time
     if (MODE == 0) {
     } else if (MODE == 1) {
       Dijkstra.search(_map, _origin, Target)
@@ -196,10 +195,8 @@ class TestScene is Scene {
       AStar.search(_map, _origin, Target)
     } else if (MODE == 3) {
       var search = AStar.fastSearch(_map, _origin, Target)
-        AStar.buildFastPath(_map, _origin, Target, search)
+      AStar.buildFastPath(_map, _origin, Target, search)
     }
-    var end = Platform.time
-    System.print("Search took %(end - start)")
   }
   draw() {
     Canvas.cls()

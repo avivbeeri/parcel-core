@@ -90,9 +90,11 @@ class ActionResult {
 }
 // ==================================
 
-class Action {
+class Action is Stateful {
   static none { Action.new() }
-  construct new() {}
+  construct new() {
+    super()
+  }
   bind(entity) {
     _source = entity
     return this
@@ -113,7 +115,7 @@ class Action {
 }
 
 class FastAction is Action {
-  construct new() {}
+  construct new() { super() }
   evaluate() {
     return ActionResult.success
   }
@@ -128,7 +130,7 @@ class FastAction is Action {
   }
 }
 class FakeAction is Action {
-  construct new() {}
+  construct new() { super() }
   evaluate() {
     return ActionResult.success
   }
@@ -464,8 +466,8 @@ class ParcelMain {
   construct new(scene) {
     Window.lockstep = true
     Window.integerScale = true
-    Window.title = Config && Config["title"] || "Parcel"
-    Canvas.resize(768,576)
+    Window.title = Config["title"]
+    Canvas.resize(Config["width"], Config["height"])
     Window.resize(Canvas.width*SCALE, Canvas.height*SCALE)
     _initial = scene
     _args = []
@@ -538,6 +540,7 @@ class Graph {
   neighbours(pos) {}
   allNeighbours(pos) {}
   cost(aPos, bPos) { 1 }
+  heuristic(aPos, bPos) { 0 }
 }
 
 class TileMap is Graph {
@@ -1065,17 +1068,33 @@ class TextUtils {
 
 
 // ==================================
-var Config
 var RNG
-var fiber = Fiber.new {
-  Config = Json.load("config.json")
+class Config {
+  static init() {
+    __config = {
+      "logLevel": "INFO",
+      "seed": Platform.time,
+      "title": "Parcel",
+      "width": 768,
+      "height": 576
+    }
+    var fiber = Fiber.new {
+      var data = Json.load("config.json")
+      for (entry in data) {
+        __config[entry.key] = entry.value
+      }
+    }
+    var error = fiber.try()
+    if (fiber.error) {
+      Log.w(fiber.error)
+    }
+    Log.level = __config["logLevel"]
+    var Seed = __config["seed"]
+    Log.d("RNG Seed: %(Seed)")
+    RNG = Random.new(Seed)
+  }
+
+  static [key] { __config[key]  }
 }
-var error = fiber.try()
-if (fiber.error) {
-  Log.w(fiber.error)
-}
-Log.level = (Config && Config["logLevel"]) || "INFO"
-var Seed = (Config && Config["seed"]) || Platform.time
-Log.d("RNG Seed: %(Seed)")
-RNG = Random.new(Seed)
+Config.init()
 // ==================================
