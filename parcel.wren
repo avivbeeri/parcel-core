@@ -609,12 +609,6 @@ class TileMap is Graph {
   yRange { _yRange }
   width { _max.x - _min.x + 1 }
   height { _max.y - _min.y + 1 }
-  cost(aPos, bPos) {
-    if (this[bPos]["sticky"]) {
-      return 2
-    }
-    return 1
-  }
 }
 
 class TileMap4 is TileMap {
@@ -625,6 +619,9 @@ class TileMap4 is TileMap {
   allNeighbours(pos) {
     return DIR_FOUR.map {|dir| pos + dir }.where{|pos| this.inBounds(pos) }.toList
   }
+  heuristic(a, b) {
+    return (b - a).manhattan
+  }
 }
 class TileMap8 is TileMap {
   construct new() { super() }
@@ -634,8 +631,11 @@ class TileMap8 is TileMap {
   allNeighbours(pos) {
     return DIR_EIGHT.map {|dir| pos + dir }.where{|pos| this.inBounds(pos) }.toList
   }
-  cost(aPos, bPos) {
-    return Line.chebychev(bPos,aPos)
+  cost(a, b) {
+    return Line.chebychev(b, a)
+  }
+  heuristic(a, b) {
+    return Line.chebychev(b,a)
   }
   successors(current, start, end) {
     var successors = Queue.new()
@@ -815,13 +815,8 @@ class Dijkstra {
   }
 }
 
+
 class AStar {
-  static heuristic(aPos, bPos) {
-    return (aPos - bPos).manhattan
-  }
-  static fastHeuristic(aPos, bPos) {
-    return Line.chebychev(bPos,aPos)
-  }
   static fastSearch(map, start, goal) {
     if (goal == null) {
       Fiber.abort("AStarSearch doesn't work without a goal")
@@ -850,7 +845,7 @@ class AStar {
         var newCost = currentCost + map.cost(current, next)
         if (!costSoFar.containsKey(next) || newCost < costSoFar[next]) {
           map[next]["cost"] = newCost
-          var priority = newCost + fastHeuristic(next, goal)
+          var priority = newCost + map.heuristic(next, goal)
           costSoFar[next] = newCost
           frontier.add(next, priority)
           cameFrom[next] = current
@@ -918,7 +913,7 @@ class AStar {
         var newCost = currentCost + map.cost(current, next)
         if (!costSoFar.containsKey(next) || newCost < costSoFar[next]) {
           map[next]["cost"] = newCost
-          var priority = newCost + heuristic(next, goal)
+          var priority = newCost + map.heuristic(next, goal)
           costSoFar[next] = newCost
           frontier.add(next, priority)
           cameFrom[next] = current
