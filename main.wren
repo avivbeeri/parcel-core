@@ -1,10 +1,12 @@
+import "dome" for Platform
 var VISION = true
 var MODE = 0
 import "graphics" for Canvas, Color
 import "math" for Vec
 import "fov" for Vision, Vision2
-import "input" for Keyboard, Mouse
+import "input" for Keyboard, Mouse, InputGroup
 import "parcel" for
+  DIR_EIGHT,
   MAX_TURN_SIZE,
   ParcelMain,
   TextUtils,
@@ -89,6 +91,17 @@ class Turn is Entity {
 class TestScene is Scene {
   construct new(args) {
     super(args)
+
+    _inputs = [
+      InputGroup.new([ Keyboard["up"], Keyboard["k"] ]),
+      InputGroup.new([ Keyboard["right"], Keyboard["l"] ]),
+      InputGroup.new([ Keyboard["down"], Keyboard["j"] ]),
+      InputGroup.new([ Keyboard["left"], Keyboard["h"] ]),
+      InputGroup.new([ Keyboard["y"] ]),
+      InputGroup.new([ Keyboard["u"] ]),
+      InputGroup.new([ Keyboard["n"] ]),
+      InputGroup.new([ Keyboard["b"] ])
+    ]
     var map = _map = TileMap8.new()
     addElement(Button.new(Vec.new(30,30), Vec.new(70, 32), "Click goes the weasel", null))
     addElement(Box.new(Vec.new(10, 15), Vec.new(16,16), null))
@@ -129,25 +142,18 @@ class TestScene is Scene {
     super.update()
     var player = _world.getEntityByTag("player")
     var changed = false
+    var i = 0
+    for (input in _inputs) {
+      if (input.firing) {
+        changed = true
+        player.pushAction(SimpleMoveAction.new(DIR_EIGHT[i]))
+      }
+      i = i + 1
+    }
+
     if (Keyboard["space"].justPressed) {
-      MODE = MODE + 1
+      MODE = (MODE + 1) % 4
       search()
-    }
-    if (Keyboard["left"].justPressed) {
-      changed = true
-      player.pushAction(SimpleMoveAction.new(Vec.new(-1, 0)))
-    }
-    if (Keyboard["up"].justPressed) {
-      changed = true
-      player.pushAction(SimpleMoveAction.new(Vec.new(0, -1)))
-    }
-    if (Keyboard["right"].justPressed) {
-      changed = true
-      player.pushAction(SimpleMoveAction.new(Vec.new(1, 0)))
-    }
-    if (Keyboard["down"].justPressed) {
-      changed = true
-      player.pushAction(SimpleMoveAction.new(Vec.new(0, 1)))
     }
     _world.advance()
 
@@ -182,6 +188,7 @@ class TestScene is Scene {
           _map[x, y]["cost"] = null
       }
     }
+    var start = Platform.time
     if (MODE == 0) {
     } else if (MODE == 1) {
       Dijkstra.search(_map, _origin, Target)
@@ -191,6 +198,8 @@ class TestScene is Scene {
       var search = AStar.fastSearch(_map, _origin, Target)
         AStar.buildFastPath(_map, _origin, Target, search)
     }
+    var end = Platform.time
+    System.print("Search took %(end - start)")
   }
   draw() {
     Canvas.cls()
