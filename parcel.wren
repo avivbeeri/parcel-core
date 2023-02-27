@@ -645,7 +645,8 @@ class TileMap8 is TileMap {
     return DIR_EIGHT.map {|dir| pos + dir }.where{|pos| this.inBounds(pos) }.toList
   }
   cost(a, b) {
-    return Line.chebychev(b, a)
+    return 1
+    //return Line.chebychev(b, a)
   }
   heuristic(a, b) {
     return Line.chebychev(b,a)
@@ -855,7 +856,7 @@ class AStar {
       var currentCost = costSoFar[current]
       var list = []
       for (next in map.successors(current, start, goal)) {
-        var newCost = currentCost + map.cost(current, next)
+        var newCost = currentCost + map.cost(current, next) + Line.chebychev(current, next)
         if (!costSoFar.containsKey(next) || newCost < costSoFar[next]) {
           map[next]["cost"] = newCost
           var priority = newCost + map.heuristic(next, goal)
