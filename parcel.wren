@@ -8,6 +8,7 @@ import "random" for Random
 var SCALE = 3
 var MAX_TURN_SIZE = 30
 
+
 class Event {
   construct new() {
     _cancelled = false
@@ -55,6 +56,12 @@ class Stateful {
   [key] { _data[key] }
   [key]=(v) { _data[key] = v }
   has(prop) { _data.containsKey(prop) && _data[prop] != null }
+}
+
+class State is Stateful {
+  onEnter() {}
+  update() { this }
+  onExit() {}
 }
 
 
@@ -414,11 +421,15 @@ class World is Stateful {
   }
 }
 
-// Generic element
+// Generic UI element
 class Element {
   construct new() {
     _elements = []
+    _z = 0
   }
+
+  z { _z }
+  z=(v) { _z = v }
   parent { _parent }
   parent=(v) { _parent = v }
   elements { _elements }
@@ -440,8 +451,10 @@ class Element {
   }
 
   addElement(element) {
+    element.z = _elements.count
     _elements.add(element)
     element.parent = this
+    _elements.sort {|a, b| a.z > b.z}
   }
   removeSelf() {
     if (parent) {

@@ -103,8 +103,8 @@ class TestScene is Scene {
       InputGroup.new([ Keyboard["b"] ])
     ]
     var map = _map = TileMap8.new()
-    addElement(Button.new(Vec.new(30,30), Vec.new(70, 32), "Click goes the weasel", null))
-    addElement(Box.new(Vec.new(10, 15), Vec.new(16,16), null))
+    addElement(Button.new(Vec.new(20,20), Vec.new(70, 32), "Click goes the weasel", null))
+    addElement(Box.new(Vec.new(10, 15), Vec.new(16,16), Color.blue))
 
     for (y in 0...32) {
       for (x in 0...32) {
