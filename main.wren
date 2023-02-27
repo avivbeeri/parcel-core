@@ -29,7 +29,7 @@ import "parcel" for
   AStar
 
 var Search = BreadthFirst
-var Target = Vec.new(16, 6)
+var Target = Vec.new(16, 11)
 
 class SimpleMoveAction is Action {
   construct new(dir) {

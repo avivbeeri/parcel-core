@@ -637,7 +637,12 @@ class TileMap4 is TileMap {
   }
 }
 class TileMap8 is TileMap {
-  construct new() { super() }
+  construct new() {
+    super()
+    _cardinal = 1
+    _diagonal = 1
+    _dMinus = _diagonal - _cardinal
+  }
   neighbours(pos) {
     return DIR_EIGHT.map {|dir| pos + dir }.where{|pos| !this.isSolid(pos) }.toList
   }
@@ -645,24 +650,38 @@ class TileMap8 is TileMap {
     return DIR_EIGHT.map {|dir| pos + dir }.where{|pos| this.inBounds(pos) }.toList
   }
   cost(a, b) {
-    return 1
-    //return Line.chebychev(b, a)
+    if (a.x == b.x || a.y == b.y) {
+      return _cardinal
+    }
+    return _diagonal
+   //return Line.chebychev(b, a)
   }
   heuristic(a, b) {
-    return Line.chebychev(b,a)
+    var dx = (a.x - b.x).abs
+    var dy = (a.y - b.y).abs
+    if (dx > dy) {
+      return _cardinal * dx + _dMinus * dy
+    }
+    return _cardinal * dy + _dMinus * dx
+    // return Line.chebychev(b,a)
   }
-  successors(current, start, end) {
-    var successors = Queue.new()
-    for (node in allNeighbours(current)) {
-      var dx = M.mid(-1, node.x - current.x, 1)
-      var dy = M.mid(-1, node.y - current.y, 1)
-
-      var jumpPoint = jump(current.x, current.y, dx, dy, start, end)
-      if (jumpPoint) {
-        successors.add(jumpPoint)
+  successor(node, current, start, end) {
+    var dx = M.mid(-1, node.x - current.x, 1)
+    var dy = M.mid(-1, node.y - current.y, 1)
+    if (isSolid(node)) {
+      return null
+    }
+    if (dx != 0 && dy != 0) {
+      // we are going diagonal
+      if (isSolid(current.x + dx, current.y) && isSolid(current.x, current.y + dy)) {
+        return null
       }
     }
-    return successors
+
+    var jumpPoint = jump(current.x, current.y, dx, dy, start, end)
+    if (jumpPoint) {
+      return jumpPoint
+    }
   }
 
   jump(cx, cy, dx, dy, start, end) {
@@ -845,24 +864,28 @@ class AStar {
     cameFrom[start] = null
     costSoFar[start] = 0
 
-    var closed = Set.new()
-
     while (!frontier.isEmpty) {
       var current = frontier.remove()
-      closed.add(current)
       if (current == goal) {
         break
       }
       var currentCost = costSoFar[current]
       var list = []
-      for (next in map.successors(current, start, goal)) {
-        var newCost = currentCost + map.cost(current, next) + Line.chebychev(current, next)
-        if (!costSoFar.containsKey(next) || newCost < costSoFar[next]) {
-          map[next]["cost"] = newCost
-          var priority = newCost + map.heuristic(next, goal)
-          costSoFar[next] = newCost
-          frontier.add(next, priority)
-          cameFrom[next] = current
+      for (next in map.allNeighbours(current)) {
+        var jump = map.successor(next, current, start, goal)
+        if (jump == null) {
+          continue
+        }
+
+        // Add the distance too as current and next aren't always
+        // adjacent
+        var newCost = currentCost + map.cost(current, jump) + Line.chebychev(current, jump)
+        if (!costSoFar.containsKey(jump) || newCost < costSoFar[jump]) {
+          map[jump]["cost"] = newCost
+          var priority = newCost + map.heuristic(jump, goal)
+          costSoFar[jump] = newCost
+          frontier.add(jump, priority)
+          cameFrom[jump] = current
         }
       }
     }
