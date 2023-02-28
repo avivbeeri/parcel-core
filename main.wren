@@ -136,6 +136,7 @@ class TestScene is Scene {
     for (i in 0...12) {
       world.advance()
     }
+
   }
 
   update() {
@@ -154,6 +155,7 @@ class TestScene is Scene {
     if (Keyboard["space"].justPressed) {
       MODE = (MODE + 1) % 4
       search()
+      System.print(_world.serialize())
     }
     _world.advance()
 

@@ -56,6 +56,10 @@ class Stateful {
   [key] { _data[key] }
   [key]=(v) { _data[key] = v }
   has(prop) { _data.containsKey(prop) && _data[prop] != null }
+  serialize() { _data }
+  deserialize(data) {
+    _data = data
+  }
 }
 
 class State is Stateful {
@@ -150,37 +154,37 @@ class FakeAction is Action {
 class Entity is Stateful {
   construct new() {
     super()
-    _state = 2 // Active
-    _pos = Vec.new()
-    _size = Vec.new(1, 1)
+    state = 2 // Active
+    pos = Vec.new()
+    size = Vec.new(1, 1)
+    zone = 0
     _actions = Queue.new()
     _events = Queue.new()
     _lastTurn = 0
-    _zone = 0
   }
 
   pushAction(action) { _actions.add(action) }
 
   bind(ctx, id) {
-    _id = id
+    data["id"] = id
     _ctx = ctx
     return this
   }
 
-  id { _id }
+  id { data["id"] }
   ctx { _ctx }
   events { _events }
 
-  state { _state }
-  state=(v) { _state = v }
-  zone { _zone }
-  zone=(v) { _zone = v }
-  pos { _pos }
-  pos=(v) { _pos = v }
-  size { _size }
-  size=(v) { _size = v }
+  state { data["state"] }
+  state=(v) { data["state"] = v }
+  zone { data["zone"] }
+  zone=(v) { data["zone"] = v }
+  pos { data["pos"] }
+  pos=(v) { data["pos"] = v }
+  size { data["size"] }
+  size=(v) { data["size"] = v }
   lastTurn { _lastTurn }
-  lastTurn=(v) { _lastTurn }
+  lastTurn=(v) { _lastTurn = v }
 
   // Entities don't update themselves
   // They supply the next action they want to perform
@@ -200,7 +204,7 @@ class Entity is Stateful {
            y <= pos.y + size.y - 1
   }
 
-  name { null }
+  name { data["name"] }
   toString { name ? name : "%(this.type.name) (id: %(_id))" }
 
   ref { EntityRef.new(ctx, entity.id) }
@@ -220,6 +224,10 @@ class EntityRef {
       actor.pushAction(action)
     }
   }
+
+  serialize() {
+    return ({ "id": _id })
+  }
 }
 
 class Zone is Stateful {
@@ -230,6 +238,11 @@ class Zone is Stateful {
   map { _map }
   ctx { _ctx }
   ctx=(v) { _ctx = v }
+  serialize() {
+    var out = Stateful.copyValue(data)
+    out["map"] = _map.serialize()
+    return out
+  }
 }
 
 class World is Stateful {
@@ -418,6 +431,14 @@ class World is Stateful {
       Log.i("%(actor): success")
       return true
     }
+  }
+
+  serialize() {
+    var out = Stateful.copyValue(data)
+    // TODO entities
+    out["zones"] = _zones.map {|zone| zone.serialize() }.toList
+    out["entities"] = allEntities.map {|entity| entity.serialize() }.toList
+    return out
   }
 }
 
@@ -622,6 +643,14 @@ class TileMap is Graph {
   yRange { _yRange }
   width { _max.x - _min.x + 1 }
   height { _max.y - _min.y + 1 }
+
+  serialize() {
+    var everything = {}
+    for (entry in tiles) {
+      everything[entry.key] = entry.value.data
+    }
+    return everything
+  }
 }
 
 class TileMap4 is TileMap {
