@@ -6,6 +6,7 @@ import "math" for Vec
 import "fov" for Vision, Vision2
 import "input" for Keyboard, Mouse, InputGroup
 import "parcel" for
+TextInputReader,
   DIR_EIGHT,
   MAX_TURN_SIZE,
   ParcelMain,
@@ -67,6 +68,7 @@ class Player is Entity {
 class TestScene is Scene {
   construct new(args) {
     super(args)
+    _kb = TextInputReader.new()
 
     _inputs = [
       InputGroup.new([ Keyboard["up"], Keyboard["k"], Keyboard["keypad 8"], Keyboard["8"]]),
@@ -110,6 +112,18 @@ class TestScene is Scene {
 
   update() {
     super.update()
+    if (_kb.enabled) {
+      _kb.update()
+      _text = _kb.text
+      if (Keyboard["return"].justPressed) {
+        _kb.disable()
+        _name = _kb.text
+      }
+      if (Keyboard["escape"].justPressed) {
+        _kb.disable()
+      }
+      return
+    }
     var player = _world.getEntityByTag("player")
     var i = 0
     for (input in _inputs) {
@@ -122,6 +136,11 @@ class TestScene is Scene {
     if (Keyboard["space"].justPressed) {
       MODE = (MODE + 1) % 4
     }
+    if (Keyboard["return"].justPressed) {
+      System.print("enable")
+      _kb.clear()
+      _kb.enable()
+    }
 
     _world.advance()
     for (event in _world.events) {
@@ -133,8 +152,8 @@ class TestScene is Scene {
   }
 
   draw() {
-    var player = _world.getEntityByTag("player")
     Canvas.cls()
+    var player = _world.getEntityByTag("player")
     var map = _world.zone.map
 
     for (y in map.yRange) {
@@ -164,6 +183,12 @@ class TestScene is Scene {
     super.draw()
     if (player) {
       Canvas.print("@", player.pos.x * 16 + 4, player.pos.y * 16 + 4, Color.white)
+    }
+
+    Canvas.print(_name, 0, Canvas.height - 17, Color.white)
+    if (_kb.enabled) {
+      Canvas.line(_kb.text.count * 8, Canvas.height - 1, (_kb.text.count + 1) * 8, Canvas.height - 1, Color.red)
+      Canvas.print(_kb.text, 0, Canvas.height - 9, Color.white)
     }
   }
 }

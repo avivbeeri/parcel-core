@@ -5,6 +5,8 @@ import "math" for Vec, Elegant, M
 import "json" for Json
 import "random" for Random
 
+import "input" for Keyboard, Clipboard
+
 var SCALE = 3
 var MAX_TURN_SIZE = 30
 
@@ -335,15 +337,12 @@ class World is Stateful {
   start() { _started = true }
 
   systems { _systems }
+  events { _events }
 
   // The size of a single timestep
   step { _step }
   step=(v) { _step = v }
 
-  events { _events }
-  pushEvent(event) {
-    event.turn = _turn
-  }
 
   // Does not guarantee an order
   allEntities { _entities.values.toList }
@@ -383,7 +382,6 @@ class World is Stateful {
   addEvent(event) {
     _events.add(event)
     event.turn = _turn
-    // TODO record in the event the turn it occurred
     systems.each{|system| system.process(this, event) }
     entities().each{|entity| entity.events.add(event) }
   }
@@ -398,7 +396,6 @@ class World is Stateful {
     var id = nextId()
     entity.zone = _zoneIndex
     _entities[id] = entity.bind(this, id)
-    // TODO Add an event for adding an entity to the world
     var t = _turn
     if (_started && _queue.count > 0) {
       var remaining = MAX_TURN_SIZE - (_queue.peekPriority() % MAX_TURN_SIZE)
@@ -1250,3 +1247,54 @@ class Config {
 }
 Config.init()
 // ==================================
+
+class TextInputReader {
+  construct new() {
+    _enabled = false
+    _text = ""
+  }
+
+  text { _text }
+  changed { _changed }
+  enabled { _enabled }
+  clear() {
+    _text = ""
+    Keyboard.handleText = false
+  }
+
+  enable() {
+    _enabled = true
+    Keyboard.handleText = true
+  }
+  disable() {
+    _enabled = false
+    Keyboard.handleText = false
+  }
+
+  update() {
+    if (!_enabled) {
+      return
+    }
+
+    if (Keyboard.text.count > 0) {
+      _text = _text + Keyboard.text
+    }
+
+    if (!Keyboard.compositionText && Keyboard["backspace"].justPressed && _text.count > 0) {
+      var codePoints = _text.codePoints
+        codePoints = codePoints.take(codePoints.count - 1)
+        _text = ""
+        for (point in codePoints) {
+          _text = _text + String.fromCodePoint(point)
+        }
+    }
+    // TODO handle text region for CJK
+
+    if ((Keyboard["left ctrl"].down || Keyboard["right ctrl"].down) && Keyboard["c"].justPressed) {
+      Clipboard.content = _text
+    }
+    if ((Keyboard["left ctrl"].down || Keyboard["right ctrl"].down) && Keyboard["v"].justPressed) {
+      _text = _text + Clipboard.content
+    }
+  }
+}
