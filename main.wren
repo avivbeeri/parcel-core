@@ -1,6 +1,6 @@
 import "dome" for Platform
 var VISION = true
-var MODE = 0
+var MODE = 3
 import "graphics" for Canvas, Color
 import "math" for Vec
 import "fov" for Vision, Vision2
@@ -9,7 +9,9 @@ import "parcel" for
   DIR_EIGHT,
   MAX_TURN_SIZE,
   ParcelMain,
+  GameSystem,
   TextUtils,
+  TurnEvent,
   Scene,
   Element,
   World,
@@ -49,17 +51,6 @@ class SimpleMoveAction is Action {
   }
   cost() { MAX_TURN_SIZE }
 }
-class DeclareTurnAction is Action {
-  construct new(turn) {
-    super()
-    _turn = turn
-  }
-  perform() {
-    Log.i("=====  TURN %(_turn) =====")
-    return ActionResult.success
-  }
-  cost() { MAX_TURN_SIZE }
-}
 class Player is Entity {
   construct new() {
     super()
@@ -70,21 +61,6 @@ class Player is Entity {
       return super.getAction()
     }
     return null
-  }
-}
-
-class Turn is Entity {
-  construct new() {
-    super()
-    pos = null
-    _turn = 1
-  }
-  name { "Turn Marker" }
-  getAction() {
-    return DeclareTurnAction.new(_turn)
-  }
-  endTurn() {
-    _turn = _turn + 1
   }
 }
 
@@ -123,30 +99,21 @@ class TestScene is Scene {
     }
 
     var world = _world = World.new()
+    _world.systems.add(VisionSystem.new())
     world.addZone(Zone.new(map))
     world.addZone(Zone.new(map))
-    var turn = world.addEntity("turn", Turn.new())
+    world.addEntity("player", Player.new())
     world.addEntity(Entity.new())
-    world.start()
-    for (i in 0...5) {
-      world.advance()
-    }
-    var player = world.addEntity("player", Player.new())
-    Log.i("Adding Player")
-    for (i in 0...12) {
-      world.advance()
-    }
 
+    world.start()
   }
 
   update() {
     super.update()
     var player = _world.getEntityByTag("player")
-    var changed = false
     var i = 0
     for (input in _inputs) {
       if (input.firing) {
-        changed = true
         player.pushAction(SimpleMoveAction.new(DIR_EIGHT[i]))
       }
       i = i + 1
@@ -154,53 +121,19 @@ class TestScene is Scene {
 
     if (Keyboard["space"].justPressed) {
       MODE = (MODE + 1) % 4
-      search()
-      System.print(_world.serialize())
     }
+
     _world.advance()
-
-    if (changed) {
-      for (y in _map.yRange) {
-        for (x in _map.xRange) {
-          _map[x, y]["seen"] = false
-          _map[x, y]["cost"] = null
-          if (_map[x, y]["visible"]) {
-            _map[x, y]["visible"] = "maybe"
-          } else {
-            _map[x, y]["visible"] = false
-          }
-        }
+    for (event in _world.events) {
+      if (event is TurnEvent) {
+        var t = event["turn"]
+        Log.i("Next turn %(t)")
       }
-      _origin = player.pos
-      search()
-
-      /*
-      */
-      Vision2.new(_map, _origin).compute()
     }
   }
 
-  search() {
-    if (!_origin) {
-      return
-    }
-    for (y in _map.yRange) {
-      for (x in _map.xRange) {
-        _map[x, y]["seen"] = false
-          _map[x, y]["cost"] = null
-      }
-    }
-    if (MODE == 0) {
-    } else if (MODE == 1) {
-      Dijkstra.search(_map, _origin, Target)
-    } else if (MODE == 2) {
-      AStar.search(_map, _origin, Target)
-    } else if (MODE == 3) {
-      var search = AStar.fastSearch(_map, _origin, Target)
-      AStar.buildFastPath(_map, _origin, Target, search)
-    }
-  }
   draw() {
+    var player = _world.getEntityByTag("player")
     Canvas.cls()
     var map = _world.zone.map
 
@@ -229,8 +162,8 @@ class TestScene is Scene {
       }
     }
     super.draw()
-    if (_origin) {
-      Canvas.print("@", _origin.x * 16 + 4, _origin.y * 16 + 4, Color.white)
+    if (player) {
+      Canvas.print("@", player.pos.x * 16 + 4, player.pos.y * 16 + 4, Color.white)
     }
   }
 }
@@ -281,10 +214,55 @@ class Button is Box {
       "position": location,
       "size": size,
       "color": color,
-      //"align": "center"
       "align":"left"
     })
     super.draw()
+  }
+}
+
+
+class VisionSystem is GameSystem {
+  construct new() { super() }
+  postUpdate(ctx, actor) {
+    var player = ctx.getEntityByTag("player")
+    if (!player) {
+      return
+    }
+    var map = ctx.zone.map
+    for (y in map.yRange) {
+      for (x in map.xRange) {
+        map[x, y]["seen"] = false
+          map[x, y]["cost"] = null
+          if (map[x, y]["visible"]) {
+            map[x, y]["visible"] = "maybe"
+          } else {
+            map[x, y]["visible"] = false
+          }
+      }
+    }
+    search(map, player.pos)
+    Vision2.new(map, player.pos).compute()
+  }
+
+  search(map, origin) {
+    if (!origin) {
+      return
+    }
+    for (y in map.yRange) {
+      for (x in map.xRange) {
+        map[x, y]["seen"] = false
+        map[x, y]["cost"] = null
+      }
+    }
+    if (MODE == 0) {
+    } else if (MODE == 1) {
+      Dijkstra.search(map, origin, Target)
+    } else if (MODE == 2) {
+      AStar.search(map, origin, Target)
+    } else if (MODE == 3) {
+      var search = AStar.fastSearch(map, origin, Target)
+      AStar.buildFastPath(map, origin, Target, search)
+    }
   }
 }
 

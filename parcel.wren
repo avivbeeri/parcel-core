@@ -8,25 +8,6 @@ import "random" for Random
 var SCALE = 3
 var MAX_TURN_SIZE = 30
 
-
-class Event {
-  construct new() {
-    _cancelled = false
-    // lower is better
-    _priority = 1
-    _turn = null
-  }
-  priority=(v) { _priority = v }
-  priority { _priority }
-  turn=(v) { _turn = v }
-  turn { _turn }
-
-  cancel() {
-    _cancelled = true
-  }
-  cancelled { _cancelled }
-}
-
 class Stateful {
   construct new() {
     _data = {}
@@ -61,6 +42,124 @@ class Stateful {
     _data = data
   }
 }
+
+class Event is Stateful {
+  construct new() {
+    super()
+    _cancelled = false
+    // lower is better
+    _priority = 1
+    _turn = null
+  }
+  priority=(v) { _priority = v }
+  priority { _priority }
+  turn=(v) { _turn = v }
+  turn { _turn }
+
+  cancel() {
+    _cancelled = true
+  }
+  cancelled { _cancelled }
+}
+
+class Entity is Stateful {
+  construct new() {
+    super()
+    state = 2 // Active
+    pos = Vec.new()
+    size = Vec.new(1, 1)
+    zone = 0
+    _actions = Queue.new()
+    _events = Queue.new()
+    _lastTurn = 0
+  }
+
+  pushAction(action) { _actions.add(action) }
+
+  bind(ctx, id) {
+    data["id"] = id
+    _ctx = ctx
+    return this
+  }
+
+  id { data["id"] }
+  ctx { _ctx }
+  events { _events }
+
+  state { data["state"] }
+  state=(v) { data["state"] = v }
+  zone { data["zone"] }
+  zone=(v) { data["zone"] = v }
+  pos { data["pos"] }
+  pos=(v) { data["pos"] = v }
+  size { data["size"] }
+  size=(v) { data["size"] = v }
+  lastTurn { _lastTurn }
+  lastTurn=(v) { _lastTurn = v }
+
+  // Entities don't update themselves
+  // They supply the next action they want to perform
+  // and the "world" applies it.
+  hasActions() { !_actions.isEmpty }
+  getAction() {
+    return _actions.dequeue() || Action.none
+  }
+  endTurn() {}
+
+  occupies(vec) { occupies(vec.x, vec.y) }
+  occupies(x, y) {
+    return pos != null &&
+           pos.x <= x &&
+           x <= pos.x + size.x - 1 &&
+           pos.y <= y &&
+           y <= pos.y + size.y - 1
+  }
+
+  name { data["name"] }
+  toString { name ? name : "%(this.type.name) (id: %(_id))" }
+
+  ref { EntityRef.new(ctx, entity.id) }
+}
+
+
+class TurnEvent is Event {
+  construct new(turn) {
+    super()
+    data["turn"] = turn
+  }
+}
+
+class GameEndEvent is Event {
+  construct new() {
+    super()
+  }
+}
+
+class ChangeZoneEvent is Event {
+  construct new() {
+    super()
+  }
+}
+class EntityEvent is Event {
+  construct new(entity) {
+    super()
+    data["source"] = entity
+  }
+
+  source { data["source"] }
+}
+
+class EntityAddedEvent is EntityEvent {
+  construct new(entity) {
+    super(entity)
+  }
+}
+class EntityRemovedEvent is EntityEvent {
+  construct new(entity) {
+    super(entity)
+  }
+}
+
 
 class State is Stateful {
   onEnter() {}
@@ -125,6 +224,34 @@ class Action is Stateful {
   toString { (this.type == Action) ? "<no action>" : "<%(this.type.name)>" }
 }
 
+class Turn is Entity {
+  construct new() {
+    super()
+    pos = null
+    _turn = 1
+  }
+  name { "Turn Marker" }
+  getAction() {
+    return DeclareTurnAction.new(_turn)
+  }
+  endTurn() {
+    _turn = _turn + 1
+  }
+}
+
+class DeclareTurnAction is Action {
+  construct new(turn) {
+    super()
+    _turn = turn
+  }
+  perform() {
+    Log.i("=====  TURN %(_turn) =====")
+    ctx.addEvent(TurnEvent.new(_turn))
+    return ActionResult.success
+  }
+  cost() { MAX_TURN_SIZE }
+}
+
 class FastAction is Action {
   construct new() { super() }
   evaluate() {
@@ -151,64 +278,6 @@ class FakeAction is Action {
   }
 }
 
-class Entity is Stateful {
-  construct new() {
-    super()
-    state = 2 // Active
-    pos = Vec.new()
-    size = Vec.new(1, 1)
-    zone = 0
-    _actions = Queue.new()
-    _events = Queue.new()
-    _lastTurn = 0
-  }
-
-  pushAction(action) { _actions.add(action) }
-
-  bind(ctx, id) {
-    data["id"] = id
-    _ctx = ctx
-    return this
-  }
-
-  id { data["id"] }
-  ctx { _ctx }
-  events { _events }
-
-  state { data["state"] }
-  state=(v) { data["state"] = v }
-  zone { data["zone"] }
-  zone=(v) { data["zone"] = v }
-  pos { data["pos"] }
-  pos=(v) { data["pos"] = v }
-  size { data["size"] }
-  size=(v) { data["size"] = v }
-  lastTurn { _lastTurn }
-  lastTurn=(v) { _lastTurn = v }
-
-  // Entities don't update themselves
-  // They supply the next action they want to perform
-  // and the "world" applies it.
-  hasActions() { !_actions.isEmpty }
-  getAction() {
-    return _actions.dequeue() || Action.none
-  }
-  endTurn() {}
-
-  occupies(vec) { occupies(vec.x, vec.y) }
-  occupies(x, y) {
-    return pos != null &&
-           pos.x <= x &&
-           x <= pos.x + size.x - 1 &&
-           pos.y <= y &&
-           y <= pos.y + size.y - 1
-  }
-
-  name { data["name"] }
-  toString { name ? name : "%(this.type.name) (id: %(_id))" }
-
-  ref { EntityRef.new(ctx, entity.id) }
-}
 
 // Weak reference
 class EntityRef {
@@ -260,14 +329,21 @@ class World is Stateful {
     _turn = -1
     _events = Queue.new()
     _queue = PriorityQueue.min()
+    _systems = []
+    addEntity("turnMarker", Turn.new())
   }
   start() { _started = true }
+
+  systems { _systems }
 
   // The size of a single timestep
   step { _step }
   step=(v) { _step = v }
 
   events { _events }
+  pushEvent(event) {
+    event.turn = _turn
+  }
 
   // Does not guarantee an order
   allEntities { _entities.values.toList }
@@ -285,7 +361,7 @@ class World is Stateful {
     for (entity in entities()) {
       _queue.add(entity.id, _turn)
     }
-    // TODO emit event
+    addEvent(ChangeZoneEvent.new(id))
   }
 
   nextId() {
@@ -302,17 +378,19 @@ class World is Stateful {
   }
 
   getEntityById(id) { _entities[id] || _ghosts[id] }
-  getEntityByTag(tag) { _tagged[tag] }
+  getEntityByTag(tag) { _entities[_tagged[tag]] }
 
-  pushEvent(event) {
+  addEvent(event) {
     _events.add(event)
+    event.turn = _turn
     // TODO record in the event the turn it occurred
+    systems.each{|system| system.process(this, event) }
     entities().each{|entity| entity.events.add(event) }
   }
 
   addEntity(tag, entity) {
     var ref = addEntity(entity)
-    _tagged[tag] = entity
+    _tagged[tag] = entity.id
     return ref
   }
 
@@ -331,6 +409,7 @@ class World is Stateful {
     Log.d("Adding %(entity) at time %(t)")
 
     _queue.add(id, t)
+    addEvent(EntityAddedEvent.new(id))
     return EntityRef.new(this, entity.id)
   }
 
@@ -362,7 +441,7 @@ class World is Stateful {
       }
     }
     entityTags.each {|tag| _tagged.remove(tag) }
-    //  todo emit an event here for entity being removed
+    addEvent(EntityRemovedEvent.new(id))
   }
 
   // Attempt to advance the world by one turn
@@ -384,9 +463,9 @@ class World is Stateful {
       // No actors, no actions to perform
       return false
     }
+    events.clear()
     Log.d("Begin %(actor) turn %(turn)")
 
-    _turn = turn
     var action = actor.getAction()
     if (action == null) {
         _queue.add(actorId, turn)
@@ -412,9 +491,10 @@ class World is Stateful {
       action = result.alternate
     }
 
-    // TODO consider if this is the right place to clear the actor's events
-    actor.events.clear()
+    // Update the current turn count
+    _turn = turn
     Log.i("%(actor): performing %(action)")
+    actor.events.clear()
     result = action.perform()
     actor.endTurn()
     actor.lastTurn = turn
@@ -423,23 +503,34 @@ class World is Stateful {
       _queue.add(actorId, turn + action.cost())
     }
 
+    var outcome = result.succeeded
     if (!result.succeeded) {
       // Action wasn't successful, allow retry
       Log.i("%(actor): failed, time loss")
-      return false
     } else {
       Log.i("%(actor): success")
-      return true
     }
+    systems.each{|system| system.postUpdate(this, actor) }
+
+    return outcome
   }
 
   serialize() {
     var out = Stateful.copyValue(data)
-    // TODO entities
     out["zones"] = _zones.map {|zone| zone.serialize() }.toList
     out["entities"] = allEntities.map {|entity| entity.serialize() }.toList
+    out["tags"] = _tagged
+    out["queue"] = _queue.toTupleList
+    out["nextId"] = _nextId
+    out["zoneIndex"] = _zoneIndex
     return out
   }
+}
+
+class GameSystem {
+  construct new() {}
+  update(ctx, actor) {}
+  process(ctx, event) {}
 }
 
 // Generic UI element
