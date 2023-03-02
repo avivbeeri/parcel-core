@@ -378,6 +378,8 @@ class World is Stateful {
 
   getEntityById(id) { _entities[id] || _ghosts[id] }
   getEntityByTag(tag) { _entities[_tagged[tag]] }
+  getEntitiesAtPosition(x, y) { getEntitiesAtPosition(Vec.new(x, y)) }
+  getEntitiesAtPosition(vec) { entities().where {|entity| entity.occupies(vec) }.toList }
 
   addEvent(event) {
     _events.add(event)

@@ -1,12 +1,14 @@
 import "dome" for Platform
 var VISION = true
 var MODE = 3
+import "combat"
+import "meta" for Meta
 import "graphics" for Canvas, Color
 import "math" for Vec
 import "fov" for Vision, Vision2
 import "input" for Keyboard, Mouse, InputGroup
 import "parcel" for
-TextInputReader,
+  TextInputReader,
   DIR_EIGHT,
   MAX_TURN_SIZE,
   ParcelMain,
@@ -118,6 +120,13 @@ class TestScene is Scene {
       if (Keyboard["return"].justPressed) {
         _kb.disable()
         _name = _kb.text
+        var error = Fiber.new {
+          var world = _world
+          Meta.eval(_kb.text)
+        }.try()
+        if (error) {
+          Log.e(error)
+        }
       }
       if (Keyboard["escape"].justPressed) {
         _kb.disable()
