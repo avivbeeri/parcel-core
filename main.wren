@@ -70,6 +70,7 @@ class Player is Entity {
 class TestScene is Scene {
   construct new(args) {
     super(args)
+    _t = 0
     _kb = TextInputReader.new()
 
     _inputs = [
@@ -115,6 +116,7 @@ class TestScene is Scene {
   update() {
     super.update()
     if (_kb.enabled) {
+      _t = _t + 1
       _kb.update()
       _text = _kb.text
       if (Keyboard["return"].justPressed) {
@@ -196,7 +198,11 @@ class TestScene is Scene {
 
     Canvas.print(_name, 0, Canvas.height - 17, Color.white)
     if (_kb.enabled) {
-      Canvas.line(_kb.text.count * 8, Canvas.height - 1, (_kb.text.count + 1) * 8, Canvas.height - 1, Color.red)
+      var x = _kb.pos * 8
+      var y = Canvas.height - 10
+      if ((_t / 30).floor % 2 == 0) {
+        Canvas.rectfill(x, y, 8, 10, Color.white)
+      }
       Canvas.print(_kb.text, 0, Canvas.height - 9, Color.white)
     }
   }

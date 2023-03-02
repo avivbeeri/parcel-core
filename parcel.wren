@@ -1254,12 +1254,15 @@ class TextInputReader {
   construct new() {
     _enabled = false
     _text = ""
+    _pos = 0
   }
 
+  pos { _pos }
   text { _text }
   changed { _changed }
   enabled { _enabled }
   clear() {
+    _pos = 0
     _text = ""
     Keyboard.handleText = false
   }
@@ -1279,16 +1282,46 @@ class TextInputReader {
     }
 
     if (Keyboard.text.count > 0) {
+      var codePoints = _text.codePoints
+      _text = ""
+      for (point in codePoints.take(_pos)) {
+        _text = _text + String.fromCodePoint(point)
+      }
       _text = _text + Keyboard.text
+      for (point in codePoints.skip(_pos)) {
+        _text = _text + String.fromCodePoint(point)
+      }
+      _pos = _pos + Keyboard.text.count
+    }
+
+    if (Keyboard["left"].justPressed) {
+      _pos = (_pos - 1).clamp(0, _text.count)
+    }
+    if (Keyboard["right"].justPressed) {
+      _pos = (_pos + 1).clamp(0, _text.count)
     }
 
     if (!Keyboard.compositionText && Keyboard["backspace"].justPressed && _text.count > 0) {
       var codePoints = _text.codePoints
-        codePoints = codePoints.take(codePoints.count - 1)
-        _text = ""
-        for (point in codePoints) {
-          _text = _text + String.fromCodePoint(point)
-        }
+      _text = ""
+      for (point in codePoints.take(_pos - 1)) {
+        _text = _text + String.fromCodePoint(point)
+      }
+      for (point in codePoints.skip(_pos)) {
+        _text = _text + String.fromCodePoint(point)
+      }
+      _pos = (_pos - 1).clamp(0, _text.count)
+    }
+    if (!Keyboard.compositionText && Keyboard["delete"].justPressed && _text.count > 0) {
+      var codePoints = _text.codePoints
+      _text = ""
+      for (point in codePoints.take(_pos)) {
+        _text = _text + String.fromCodePoint(point)
+      }
+      for (point in codePoints.skip(_pos+1)) {
+        _text = _text + String.fromCodePoint(point)
+      }
+      _pos = (_pos).clamp(0, _text.count)
     }
     // TODO handle text region for CJK
 
