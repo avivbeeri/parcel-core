@@ -31,10 +31,21 @@ import "parcel" for
   BreadthFirst,
   Dijkstra,
   Line,
+  Palette,
   AStar
 
 var Search = BreadthFirst
 var Target = Vec.new(16, 11)
+var Pal = Palette.new()
+Pal.addColor("white", Color.new(255, 255, 255))
+Pal.addColor("gray", Color.darkgray)
+Pal.addColor("black", Color.new(0, 0, 0))
+Pal.addColor("red", Color.new(255, 0, 0))
+Pal.addColor("green", Color.new(0, 255, 0))
+Pal.addColor("blue", Color.new(0, 255, 255))
+
+Pal.setPurpose("floor", "gray")
+Pal.setPurpose("wall", "white")
 
 class SimpleMoveAction is Action {
   construct new(dir) {
@@ -109,6 +120,7 @@ class TestScene is Scene {
     world.addZone(Zone.new(map))
     world.addEntity("player", Player.new())
     world.addEntity(Entity.new())
+    _name = ""
 
     world.start()
   }
@@ -118,7 +130,7 @@ class TestScene is Scene {
     if (_kb.enabled) {
       _t = _t + 1
       _kb.update()
-      _text = _kb.text
+      _text = _kb.text || ""
       if (Keyboard["return"].justPressed) {
         _kb.disable()
         _name = _kb.text
@@ -172,7 +184,7 @@ class TestScene is Scene {
         if (!VISION && (!map[x, y]["visible"] || map[x, y]["visible"] == "maybe")) {
           continue
         }
-        var color = Color.white
+        var color = Pal["wall"]
         if (map[x, y]["visible"] == "maybe") {
           color = Color.darkgray
         }
@@ -181,9 +193,9 @@ class TestScene is Scene {
         }
         if (map[x, y]["void"]) {
         } else if (map[x, y]["solid"]) {
-          Canvas.print("#", x * 16 + 4, y * 16 + 4, Color.lightgray)
+          Canvas.print("#", x * 16 + 4, y * 16 + 4, Pal["wall"])
         } else if (map[x, y]["cost"]) {
-          Canvas.rectfill(x * 16, y*16, 16, 16, Color.darkgray)
+          Canvas.rectfill(x * 16, y*16, 16, 16, Pal["floor"])
           Canvas.print(map[x, y]["cost"], x * 16 + 4, y * 16 + 4, color)
 
         } else {

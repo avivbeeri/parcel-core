@@ -1,6 +1,6 @@
 import "dome" for Window, Process, Platform, Log
 import "graphics" for Canvas, Color, Font
-import "collections" for PriorityQueue, Queue, Set, HashMap
+import "collections" for PriorityQueue, Queue, Set, HashMap, Stack
 import "math" for Vec, Elegant, M
 import "json" for Json
 import "random" for Random
@@ -121,6 +121,26 @@ class Entity is Stateful {
   toString { name ? name : "%(this.type.name) (id: %(_id))" }
 
   ref { EntityRef.new(ctx, entity.id) }
+}
+
+class BehaviourEntity is Entity {
+  construct new() {
+    super()
+    _behaviours = Stack.new()
+  }
+
+  getAction() {
+    // behaviours can push their own actions onto the queue
+    // Variants could use a priority queue to do the
+    // most critical thing if there's multiple options
+    for (behaviour in _behaviours) {
+      var result = behaviour.update(ctx, this)
+      if (result == true) {
+        break
+      }
+    }
+    return super.getAction()
+  }
 }
 
 
@@ -333,6 +353,17 @@ class World is Stateful {
     _queue = PriorityQueue.min()
     _systems = []
     addEntity("turnMarker", Turn.new())
+    _fn = Fn.new {
+      var advance = true
+      while (true) {
+        advance = processTurn()
+        if (complete) {
+          break
+        }
+        Fiber.yield()
+      }
+    }
+    _fiber = null
   }
   start() { _started = true }
 
@@ -446,6 +477,12 @@ class World is Stateful {
   // Attempt to advance the world by one turn
   // returns true if something changed
   advance() {
+    if (!_fiber || _fiber.isDone) {
+      _fiber = Fiber.new(_fn)
+    }
+    _fiber.call()
+  }
+  processTurn() {
     if (!_started) {
       Fiber.abort("Attempting to advance the world before start() has been called")
     }
@@ -1248,6 +1285,24 @@ class Config {
   static [key] { __config[key]  }
 }
 Config.init()
+
+// ==================================
+class Palette {
+
+  construct new() {
+    _palette = {}
+    _keys = {}
+  }
+
+  addColor(name, color) {
+    _palette[name] = color
+  }
+  setPurpose(purpose, colorName) {
+    _keys[purpose] = colorName
+  }
+
+  [key] { _palette[_keys[key]]}
+}
 // ==================================
 
 class TextInputReader {
@@ -1276,22 +1331,23 @@ class TextInputReader {
     Keyboard.handleText = false
   }
 
+  splitText(before, insert, after) {
+    var codePoints = _text.codePoints
+    _text = ""
+    for (point in codePoints.take(before)) {
+      _text = _text + String.fromCodePoint(point)
+    }
+    if (insert != null) {
+      _text = _text + insert
+    }
+    for (point in codePoints.skip(after)) {
+      _text = _text + String.fromCodePoint(point)
+    }
+  }
+
   update() {
     if (!_enabled) {
       return
-    }
-
-    if (Keyboard.text.count > 0) {
-      var codePoints = _text.codePoints
-      _text = ""
-      for (point in codePoints.take(_pos)) {
-        _text = _text + String.fromCodePoint(point)
-      }
-      _text = _text + Keyboard.text
-      for (point in codePoints.skip(_pos)) {
-        _text = _text + String.fromCodePoint(point)
-      }
-      _pos = _pos + Keyboard.text.count
     }
 
     if (Keyboard["left"].justPressed) {
@@ -1301,26 +1357,19 @@ class TextInputReader {
       _pos = (_pos + 1).clamp(0, _text.count)
     }
 
+    if (Keyboard.text.count > 0) {
+      splitText(_pos, Keyboard.text, _pos)
+      _pos = _pos + Keyboard.text.count
+    }
+
     if (!Keyboard.compositionText && Keyboard["backspace"].justPressed && _text.count > 0) {
       var codePoints = _text.codePoints
-      _text = ""
-      for (point in codePoints.take(_pos - 1)) {
-        _text = _text + String.fromCodePoint(point)
-      }
-      for (point in codePoints.skip(_pos)) {
-        _text = _text + String.fromCodePoint(point)
-      }
+      splitText(_pos - 1, null, _pos)
       _pos = (_pos - 1).clamp(0, _text.count)
     }
     if (!Keyboard.compositionText && Keyboard["delete"].justPressed && _text.count > 0) {
       var codePoints = _text.codePoints
-      _text = ""
-      for (point in codePoints.take(_pos)) {
-        _text = _text + String.fromCodePoint(point)
-      }
-      for (point in codePoints.skip(_pos+1)) {
-        _text = _text + String.fromCodePoint(point)
-      }
+      splitText(_pos, null, _pos+1)
       _pos = (_pos).clamp(0, _text.count)
     }
     // TODO handle text region for CJK
