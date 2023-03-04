@@ -1,6 +1,5 @@
 import "dome" for Platform
-var VISION = true
-var MODE = 3
+var MODE = 2
 import "combat"
 import "meta" for Meta
 import "graphics" for Canvas, Color
@@ -32,6 +31,7 @@ import "parcel" for
   Dijkstra,
   Line,
   Palette,
+  JPS,
   AStar
 
 var Search = BreadthFirst
@@ -53,10 +53,10 @@ class SimpleMoveAction is Action {
     _dir = dir
   }
   evaluate() {
-    if (ctx.zone.map.isSolid(src.pos + _dir)) {
-      return ActionResult.invalid
+    if (ctx.zone.map.neighbours(src.pos).contains(src.pos + _dir)) {
+      return ActionResult.valid
     }
-    return ActionResult.valid
+    return ActionResult.invalid
   }
 
   perform() {
@@ -160,7 +160,6 @@ class TestScene is Scene {
       MODE = (MODE + 1) % 4
     }
     if (Keyboard["return"].justPressed) {
-      System.print("enable")
       _kb.clear()
       _kb.enable()
     }
@@ -181,10 +180,10 @@ class TestScene is Scene {
 
     for (y in map.yRange) {
       for (x in map.xRange) {
-        if (!VISION && (!map[x, y]["visible"] || map[x, y]["visible"] == "maybe")) {
+        if (!map[x, y]["visible"]) {
           continue
         }
-        var color = Pal["wall"]
+        var color = Color.white
         if (map[x, y]["visible"] == "maybe") {
           color = Color.darkgray
         }
@@ -193,9 +192,9 @@ class TestScene is Scene {
         }
         if (map[x, y]["void"]) {
         } else if (map[x, y]["solid"]) {
-          Canvas.print("#", x * 16 + 4, y * 16 + 4, Pal["wall"])
+          Canvas.print("#", x * 16 + 4, y * 16 + 4, color)
         } else if (map[x, y]["cost"]) {
-          Canvas.rectfill(x * 16, y*16, 16, 16, Pal["floor"])
+          Canvas.rectfill(x * 16, y*16, 16, 16, Color.darkgray)
           Canvas.print(map[x, y]["cost"], x * 16 + 4, y * 16 + 4, color)
 
         } else {
@@ -284,16 +283,16 @@ class VisionSystem is GameSystem {
     for (y in map.yRange) {
       for (x in map.xRange) {
         map[x, y]["seen"] = false
-          map[x, y]["cost"] = null
-          if (map[x, y]["visible"]) {
-            map[x, y]["visible"] = "maybe"
-          } else {
-            map[x, y]["visible"] = false
-          }
+        map[x, y]["cost"] = null
+        if (map[x, y]["visible"]) {
+          map[x, y]["visible"] = "maybe"
+        } else {
+          map[x, y]["visible"] = false
+        }
       }
     }
-    search(map, player.pos)
     Vision2.new(map, player.pos).compute()
+    search(map, player.pos)
   }
 
   search(map, origin) {
@@ -312,8 +311,8 @@ class VisionSystem is GameSystem {
     } else if (MODE == 2) {
       AStar.search(map, origin, Target)
     } else if (MODE == 3) {
-      var search = AStar.fastSearch(map, origin, Target)
-      AStar.buildFastPath(map, origin, Target, search)
+      var search = JPS.fastSearch(map, origin, Target)
+      JPS.buildFastPath(map, origin, Target, search)
     }
   }
 }

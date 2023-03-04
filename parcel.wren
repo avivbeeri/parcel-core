@@ -701,7 +701,6 @@ class Graph {
   neighbours(pos) {}
   allNeighbours(pos) {}
   cost(aPos, bPos) { 1 }
-  heuristic(aPos, bPos) { 0 }
 }
 
 class TileMap is Graph {
@@ -788,19 +787,27 @@ class TileMap4 is TileMap {
   allNeighbours(pos) {
     return DIR_FOUR.map {|dir| pos + dir }.where{|pos| this.inBounds(pos) }.toList
   }
-  heuristic(a, b) {
-    return (b - a).manhattan
-  }
 }
 class TileMap8 is TileMap {
   construct new() {
     super()
     _cardinal = 1
     _diagonal = 1
-    _dMinus = _diagonal - _cardinal
   }
   neighbours(pos) {
-    return DIR_EIGHT.map {|dir| pos + dir }.where{|pos| !this.isSolid(pos) }.toList
+    return DIR_EIGHT.map {|dir| pos + dir }.where{|next|
+      var dx = M.mid(-1, next.x - pos.x, 1)
+      var dy = M.mid(-1, next.y - pos.y, 1)
+
+      if (this.isSolid(next)) {
+        return false
+      }
+
+      if (dx != 0 && dy != 0) {
+        return !(isSolid(pos.x + dx, pos.y) || isSolid(pos.x, pos.y + dy))
+      }
+      return true
+    }.toList
   }
   allNeighbours(pos) {
     return DIR_EIGHT.map {|dir| pos + dir }.where{|pos| this.inBounds(pos) }.toList
@@ -810,17 +817,8 @@ class TileMap8 is TileMap {
       return _cardinal
     }
     return _diagonal
-   //return Line.chebychev(b, a)
   }
-  heuristic(a, b) {
-    var dx = (a.x - b.x).abs
-    var dy = (a.y - b.y).abs
-    if (dx > dy) {
-      return _cardinal * dx + _dMinus * dy
-    }
-    return _cardinal * dy + _dMinus * dx
-    // return Line.chebychev(b,a)
-  }
+
   successor(node, current, start, end) {
     var dx = M.mid(-1, node.x - current.x, 1)
     var dy = M.mid(-1, node.y - current.y, 1)
@@ -829,7 +827,7 @@ class TileMap8 is TileMap {
     }
     if (dx != 0 && dy != 0) {
       // we are going diagonal
-      if (isSolid(current.x + dx, current.y) && isSolid(current.x, current.y + dy)) {
+      if (isSolid(current.x + dx, current.y) || isSolid(current.x, current.y + dy)) {
         return null
       }
     }
@@ -1006,9 +1004,75 @@ class Dijkstra {
 
 
 class AStar {
-  static fastSearch(map, start, goal) {
+  static heuristic(a, b) {
+    return (b - a).manhattan
+  }
+  static search(map, start, goal) {
     if (goal == null) {
       Fiber.abort("AStarSearch doesn't work without a goal")
+    }
+    var frontier = PriorityQueue.min()
+    var cameFrom = HashMap.new()
+    var costSoFar = HashMap.new()
+    if (!(start is Sequence)) {
+      start = [ start ]
+    }
+    for (pos in start) {
+      frontier.add(pos, 0)
+      cameFrom[pos] = null
+      costSoFar[pos] = 0
+    }
+    while (!frontier.isEmpty) {
+      var current = frontier.remove()
+      if (current == goal) {
+        break
+      }
+      var currentCost = costSoFar[current]
+      for (next in map.neighbours(current)) {
+        var newCost = currentCost + map.cost(current, next)
+        if (!costSoFar.containsKey(next) || newCost < costSoFar[next]) {
+          map[next]["cost"] = newCost
+          var priority = newCost + AStar.heuristic(next, goal)
+          costSoFar[next] = newCost
+          frontier.add(next, priority)
+          cameFrom[next] = current
+        }
+      }
+    }
+
+    var current = goal
+    if (cameFrom[goal] == null) {
+      return null // There is no valid path
+    }
+
+    var path = []
+    while (!start.contains(current)) {
+      path.add(current)
+      current = cameFrom[current]
+    }
+    for (pos in path) {
+      map[pos]["seen"] = true
+    }
+    return path
+  }
+}
+class JPS {
+  static heuristic(a, b) {
+    return Line.chebychev(a, b)
+  }
+  static octileHeuristic(a, b, cardinal, diagonal) {
+    var dMinus = diagonal - cardinal
+    var dx = (a.x - b.x).abs
+    var dy = (a.y - b.y).abs
+    if (dx > dy) {
+      return cardinal * dx + dMinus * dy
+    }
+    return cardinal * dy + dMinus * dx
+  }
+
+  static fastSearch(map, start, goal) {
+    if (goal == null) {
+      Fiber.abort("JPS doesn't work without a goal")
     }
     var frontier = PriorityQueue.min()
     var cameFrom = HashMap.new()
@@ -1038,7 +1102,7 @@ class AStar {
         var newCost = currentCost + map.cost(current, jump) + Line.chebychev(current, jump)
         if (!costSoFar.containsKey(jump) || newCost < costSoFar[jump]) {
           map[jump]["cost"] = newCost
-          var priority = newCost + map.heuristic(jump, goal)
+          var priority = newCost + JPS.octileHeuristic(jump, goal, 1, 1)
           costSoFar[jump] = newCost
           frontier.add(jump, priority)
           cameFrom[jump] = current
@@ -1047,6 +1111,7 @@ class AStar {
     }
     return cameFrom
   }
+
   static buildFastPath(map, start, goal, cameFrom) {
     if (!(map is TileMap8)) {
       Fiber.abort("fast path only works with TileMap8")
@@ -1080,54 +1145,6 @@ class AStar {
       map[pos]["seen"] = true
     }
 
-  }
-  static search(map, start, goal) {
-    if (goal == null) {
-      Fiber.abort("AStarSearch doesn't work without a goal")
-    }
-    var frontier = PriorityQueue.min()
-    var cameFrom = HashMap.new()
-    var costSoFar = HashMap.new()
-    if (!(start is Sequence)) {
-      start = [ start ]
-    }
-    for (pos in start) {
-      frontier.add(pos, 0)
-      cameFrom[pos] = null
-      costSoFar[pos] = 0
-    }
-    while (!frontier.isEmpty) {
-      var current = frontier.remove()
-      if (current == goal) {
-        break
-      }
-      var currentCost = costSoFar[current]
-      for (next in map.neighbours(current)) {
-        var newCost = currentCost + map.cost(current, next)
-        if (!costSoFar.containsKey(next) || newCost < costSoFar[next]) {
-          map[next]["cost"] = newCost
-          var priority = newCost + map.heuristic(next, goal)
-          costSoFar[next] = newCost
-          frontier.add(next, priority)
-          cameFrom[next] = current
-        }
-      }
-    }
-
-    var current = goal
-    if (cameFrom[goal] == null) {
-      return null // There is no valid path
-    }
-
-    var path = []
-    while (!start.contains(current)) {
-      path.add(current)
-      current = cameFrom[current]
-    }
-    for (pos in path) {
-      map[pos]["seen"] = true
-    }
-    return path
   }
 }
 
